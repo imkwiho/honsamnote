@@ -1,0 +1,10 @@
+name = "ai-blog"
+compatibility_date = "2024-01-01"
+
+[site]
+bucket = "./out"
+
+[[redirects]]
+from = "/*"
+to = "/404.html"
+status = 404

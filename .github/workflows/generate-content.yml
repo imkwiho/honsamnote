@@ -1,0 +1,56 @@
+name: 블로그 글 수동 발행
+
+# 자동 스케줄 없음 — Actions 탭에서 "Run workflow" 를 눌렀을 때만 실행됩니다.
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: '이번에 생성할 글 개수'
+        required: false
+        default: '2'
+      category:
+        description: '카테고리 (auto = 8개 섹션을 순환하며 자동 선택)'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - cost
+          - food
+          - storage
+          - cleaning
+          - safety
+          - housing
+          - products
+          - lifestyle
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: 글 자동 생성 (주제는 topics.json 에서 자동 선택)
+        run: npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts "${{ github.event.inputs.count || '2' }}" "${{ github.event.inputs.category || 'auto' }}"
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+      - name: 커밋 & 푸시 (여기서 실제로 블로그에 발행됨)
+        run: |
+          git config --global user.name 'AI Blog Bot'
+          git config --global user.email 'bot@blog.com'
+          git add content/blog/ content/topics.json
+          git diff --staged --quiet || git commit -m "feat: 1인 가구 블로그 글 자동 발행 - $(date +'%Y-%m-%d %H:%M')"
+          git push

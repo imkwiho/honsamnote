@@ -1,36 +1,142 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 1인 가구 생활백서
 
-## Getting Started
+혼자 사는 사람의 시간·돈·공간·안전을 최적화하는 생활 정보 블로그. Next.js 16 + Firebase + Gemini AI 기반이며, Cloudflare Pages에 정적 배포됩니다.
 
-First, run the development server:
+글 발행은 **자동 스케줄 없이, GitHub Actions를 수동으로 실행할 때만** 이루어집니다. 원하는 시간에 Actions 탭에서 버튼을 눌러 발행하세요.
+
+## 기술 스택
+
+- **프레임워크**: Next.js 16 (Static Export)
+- **스타일**: Tailwind CSS v4
+- **데이터베이스**: Firebase Firestore (조회수, 구독자)
+- **AI**: Google Gemini 2.0 Flash (콘텐츠 자동 생성)
+- **배포**: Cloudflare Pages (GitHub Actions CI/CD)
+
+## 콘텐츠 전략
+
+`content/topics.json`에 8개 생활 영역(생활비/식재료/수납/청소/안전/주거/제품/관계)과 약 80개의 소재가 미리 정리되어 있습니다. 각 소재는 `status: pending → published`로 관리되며, 발행 워크플로를 실행할 때마다 자동으로 다음 소재를 골라 글을 씁니다. 소재가 다 떨어지면 이 파일에 새 항목을 추가하면 됩니다.
+
+## 글 발행하기 (수동)
+
+1. GitHub 저장소 → **Actions** 탭 → **"블로그 글 수동 발행"** 워크플로 선택
+2. **Run workflow** 클릭
+3. 입력값 (모두 선택 사항, 비워두면 기본값 사용)
+   - `count`: 이번에 생성할 글 개수 (기본 2개)
+   - `category`: 특정 카테고리만 쓰고 싶으면 지정, 비워두면 `auto`로 8개 섹션을 순환하며 자동 선택
+4. 실행하면 AI가 주제를 스스로 정하고, `content/blog/`에 글을 커밋·푸시합니다 → 이 푸시가 배포 워크플로(`deploy.yml`)를 트리거해 Cloudflare Pages에 자동 반영됩니다.
+
+즉, **"Run workflow"를 누르는 순간이 곧 발행 시점**입니다. 정해진 시간에 자동으로 올라가지 않습니다.
+
+로컬에서 직접 생성해보고 싶다면:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts 2 auto
+# 인자: [개수] [카테고리 슬러그 또는 auto]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 주의: 비용·법률·안전 관련 글
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`cost`, `housing`, `safety` 카테고리 글은 AI가 본문 끝에 "정보 확인 필요" 안내 문구를 자동으로 넣도록 프롬프트가 구성되어 있습니다. 다만 AI가 생성한 수치나 절차는 실제 발행 전에 한 번 훑어보는 것을 권장합니다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 로컬 개발
 
-## Learn More
+```bash
+# 1. 의존성 설치
+npm install
 
-To learn more about Next.js, take a look at the following resources:
+# 2. 환경변수 설정
+cp .env.local.example .env.local
+# .env.local 파일을 편집하여 실제 값 입력
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 3. 개발 서버 실행
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 빌드 & 배포
 
-## Deploy on Vercel
+```bash
+# 빌드
+npm run build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Cloudflare Pages 수동 배포
+npm run deploy
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## GitHub Secrets 설정
+
+GitHub 저장소 → Settings → Secrets and variables → Actions 에서 아래 Secrets 등록:
+
+| Secret 이름 | 설명 | 발급처 |
+|-------------|------|--------|
+| `GEMINI_API_KEY` | Gemini API 키 | [Google AI Studio](https://aistudio.google.com) |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 | Cloudflare → My Profile → API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID | Cloudflare 대시보드 우측 하단 |
+| `NEXT_PUBLIC_ADMIN_HASH` | 관리자 비밀번호 SHA-256 해시 | `node -e "const c=require('crypto');console.log(c.createHash('sha256').update('비밀번호').digest('hex'))"` |
+| `ADMIN_PASSWORD` | (GitHub Actions용 참고값) | 직접 설정 |
+| `ADMIN_SECRET_TOKEN` | 관리자 세션 토큰 | `openssl rand -base64 32` |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API 키 | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase Auth 도메인 | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase 프로젝트 ID | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase Storage | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase Sender ID | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase App ID | Firebase 프로젝트 설정 |
+| `NEXT_PUBLIC_SITE_URL` | 사이트 URL | `https://your-project.pages.dev` |
+| `NEXT_PUBLIC_SITE_NAME` | 블로그 이름 | 직접 설정 (예: `1인 가구 생활백서`) |
+| `CLOUDFLARE_ANALYTICS_TOKEN` | Cloudflare Analytics (선택) | Cloudflare Analytics |
+
+## Firebase Firestore 보안 규칙
+
+Firebase 콘솔 → Firestore → Rules 에서 아래 규칙 적용:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /views/{slug} {
+      allow read, write: if true;
+    }
+    match /subscribers/{id} {
+      allow read: if false;
+      allow write: if true;
+    }
+  }
+}
+```
+
+## Cloudflare Pages 초기 설정
+
+1. Cloudflare 대시보드 → Pages → Create a project
+2. GitHub 저장소 연결
+3. 빌드 설정:
+   - Build command: `npm run build`
+   - Build output directory: `out`
+4. Environment variables: 위 Secrets 목록 참고하여 동일하게 입력
+
+## 도메인 연결
+
+1. Cloudflare Pages → 프로젝트 → Custom domains
+2. 도메인 입력 후 DNS 설정 안내 따르기
+3. 이미 Cloudflare에서 관리 중인 도메인이라면 자동 설정됨
+
+## 콘텐츠 구조
+
+MDX 파일이 `content/blog/`에 있으면 자동으로 블로그에 반영됩니다. 워크플로가 생성하는 파일은 아래 형식입니다.
+
+```mdx
+---
+title: "퇴근 후 15분으로 원룸을 유지하는 청소 순서"
+description: "150자 이내 설명"
+date: "2026-07-27"
+tags: ["청소", "원룸", "루틴"]
+keywords: ["원룸 청소", "청소 루틴"]
+category: "cleaning"
+categoryName: "청소·세탁·집안일"
+---
+
+## 문제 상황
+...
+## 먼저 확인할 결론
+...
+```
+
+수동으로 글을 추가할 때도 `category`(topics.json의 slug)와 `categoryName`을 넣어주면 카테고리 페이지(`/category/[slug]`)에 자동으로 노출됩니다.

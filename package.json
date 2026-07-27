@@ -6,10 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate": "ts-node --project tsconfig.scripts.json scripts/generate-post.ts",
+    "deploy": "npm run build && wrangler pages deploy out"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
+    "@google/generative-ai": "^0.24.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "firebase": "^12.14.0",
+    "gray-matter": "^4.0.3",
     "next": "16.2.7",
+    "next-mdx-remote": "^6.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -21,6 +29,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "wrangler": "^4.98.0"
   }
 }
