@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllViewCounts, getTopPosts } from '@/lib/views';
 import { getSubscriberCount, getRecentSubscribers } from '@/lib/subscribers';
+import { getSiteVisitCount } from '@/lib/visits';
 
 interface PostMeta {
   slug: string;
@@ -26,6 +27,7 @@ interface Subscriber {
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [totalVisitors, setTotalVisitors] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
   const [topPosts, setTopPosts] = useState<ViewData[]>([]);
   const [allViews, setAllViews] = useState<ViewData[]>([]);
@@ -43,12 +45,13 @@ export default function AdminDashboardPage() {
 
     async function load() {
       try {
-        const [postsRes, viewCounts, top, subCount, subs] = await Promise.all([
+        const [postsRes, viewCounts, top, subCount, subs, visitorCount] = await Promise.all([
           fetch('/api/posts').then(r => r.json()) as Promise<PostMeta[]>,
           getAllViewCounts(),
           getTopPosts(10),
           getSubscriberCount(),
           getRecentSubscribers(10),
+          getSiteVisitCount(),
         ]);
 
         const postMap: Record<string, PostMeta> = {};
@@ -57,6 +60,7 @@ export default function AdminDashboardPage() {
         const enrich = (data: { slug: string; count: number }[]) =>
           data.map(v => ({ ...v, title: postMap[v.slug]?.title ?? v.slug, date: postMap[v.slug]?.date ?? '' }));
 
+        setTotalVisitors(visitorCount);
         setTotalViews(viewCounts.reduce((s, v) => s + v.count, 0));
         setTopPosts(enrich(top));
         setAllViews(enrich(viewCounts).sort((a, b) => b.count - a.count));
@@ -87,9 +91,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 요약 카드 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white border border-blue-200 rounded-xl p-6 ring-1 ring-blue-100">
+          <p className="text-sm text-gray-500 mb-1">전체 방문자 수</p>
+          <p className="text-3xl font-bold text-blue-600">{totalVisitors.toLocaleString()}</p>
+        </div>
         <div className="bg-white border border-gray-200 rounded-xl p-6">
-          <p className="text-sm text-gray-500 mb-1">전체 조회수</p>
+          <p className="text-sm text-gray-500 mb-1">전체 글 조회수</p>
           <p className="text-3xl font-bold text-gray-900">{totalViews.toLocaleString()}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-6">

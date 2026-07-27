@@ -95,6 +95,9 @@ service cloud.firestore {
     match /views/{slug} {
       allow read, write: if true;
     }
+    match /analytics/{id} {
+      allow read, write: if true;
+    }
     match /subscribers/{id} {
       allow read: if false;
       allow write: if true;
@@ -102,6 +105,8 @@ service cloud.firestore {
   }
 }
 ```
+
+`analytics/site` 문서에 전체 방문자 수(세션당 1회 집계)가 누적되고, 관리자 대시보드(`/admin/dashboard`)에서 확인할 수 있습니다.
 
 ## Cloudflare Pages 초기 설정
 

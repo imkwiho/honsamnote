@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import Link from 'next/link';
+import SiteVisitTracker from '@/components/SiteVisitTracker';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'] });
@@ -15,9 +16,13 @@ export const metadata: Metadata = {
 const navLinks = [
   { label: '전체 글', href: '/blog' },
   { label: '생활비', href: '/category/cost' },
-  { label: '청소·집안일', href: '/category/cleaning' },
-  { label: '안전·응급', href: '/category/safety' },
-  { label: '제품·서비스', href: '/category/products' },
+  { label: '식재료', href: '/category/food' },
+  { label: '수납', href: '/category/storage' },
+  { label: '청소', href: '/category/cleaning' },
+  { label: '안전', href: '/category/safety' },
+  { label: '주거', href: '/category/housing' },
+  { label: '제품', href: '/category/products' },
+  { label: '관계', href: '/category/lifestyle' },
   { label: '뉴스레터', href: '/#newsletter' },
 ];
 
@@ -36,27 +41,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body className={`${geist.className} min-h-screen`}
-        style={{ background: '#f5f5f7', color: '#1d1d1f' }}>
+        style={{ background: '#eaf3ff', color: '#1d1d1f' }}>
+
+        <SiteVisitTracker />
 
         {/* 프로스티드 글래스 네비 */}
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-black/[0.06]"
-          style={{ backdropFilter: 'saturate(180%) blur(20px)', background: 'rgba(245,245,247,0.85)' }}>
-          <nav className="max-w-6xl mx-auto px-6 h-[52px] flex items-center justify-between">
+          style={{ backdropFilter: 'saturate(180%) blur(20px)', background: 'rgba(234,243,255,0.85)' }}>
+          <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-[52px] flex items-center justify-between">
             <Link href="/" className="text-[15px] font-bold tracking-tight text-[#1d1d1f] shrink-0">
               {SITE_NAME}
             </Link>
             {/* 데스크탑 메뉴 */}
-            <div className="hidden md:flex items-center gap-1">
+            <div className="hidden lg:flex items-center gap-0.5">
               {navLinks.map(l => (
                 <a key={l.href} href={l.href}
-                  className="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors px-3 py-1.5 rounded-lg hover:bg-black/[0.04]">
+                  className="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] whitespace-nowrap">
                   {l.label}
                 </a>
               ))}
             </div>
-            {/* 모바일: 뉴스레터 버튼만 */}
+            {/* 모바일·태블릿: 뉴스레터 버튼만 */}
             <Link href="/#newsletter"
-              className="md:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full" style={{ background: '#0071e3' }}>
+              className="lg:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full" style={{ background: '#0071e3' }}>
               구독
             </Link>
           </nav>
@@ -64,7 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main className="pt-[52px]">{children}</main>
 
-        <footer className="mt-20 border-t border-[#d2d2d7] py-10 px-6">
+        <footer className="mt-20 border-t border-[#c7ddfb] py-10 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8 text-[13px]">
               <div>
@@ -92,7 +99,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 ))}
               </div>
             </div>
-            <div className="border-t border-[#d2d2d7] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="border-t border-[#c7ddfb] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
               <p className="text-[12px] text-[#aeaeb2]">© {new Date().getFullYear()} {SITE_NAME}. 혼자 사는 삶을 더 쉽게.</p>
               <p className="text-[12px] text-[#aeaeb2]">Powered by Gemini AI</p>
             </div>

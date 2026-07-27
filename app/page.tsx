@@ -3,19 +3,22 @@ import Link from 'next/link';
 import SubscribeForm from '@/components/SubscribeForm';
 import QuickStats from '@/components/QuickStats';
 
-// 그레이 팔레트
-const BLUE = '#6e6e73';
-const BLUE_DARK = '#3a3a3c';
-const BLUE_LIGHT = '#f2f2f7';
+// 밝은 블루 팔레트
+const BLUE = '#2f6fed';
+const BLUE_DARK = '#0a3d91';
+const BLUE_LIGHT = '#e3edfc';
 // 강조 파랑 (바, 칩 등 소형 엑센트)
 const ACCENT = '#0071e3';
 
 const CATEGORIES = [
   { label: '생활비 최적화', href: '/category/cost', color: 'bg-blue-50 text-blue-600' },
-  { label: '청소·집안일', href: '/category/cleaning', color: 'bg-purple-50 text-purple-600' },
+  { label: '혼밥·식재료 관리', href: '/category/food', color: 'bg-sky-50 text-sky-600' },
+  { label: '좁은 집과 수납', href: '/category/storage', color: 'bg-cyan-50 text-cyan-600' },
+  { label: '청소·세탁·집안일', href: '/category/cleaning', color: 'bg-indigo-50 text-indigo-600' },
   { label: '안전·응급상황', href: '/category/safety', color: 'bg-rose-50 text-rose-600' },
-  { label: '주거·계약·이사', href: '/category/housing', color: 'bg-orange-50 text-orange-600' },
-  { label: '제품·서비스', href: '/category/products', color: 'bg-green-50 text-green-600' },
+  { label: '주거·계약·이사', href: '/category/housing', color: 'bg-teal-50 text-teal-600' },
+  { label: '1인 가구 제품·서비스', href: '/category/products', color: 'bg-emerald-50 text-emerald-600' },
+  { label: '관계·고립·생활 리듬', href: '/category/lifestyle', color: 'bg-violet-50 text-violet-600' },
 ];
 
 export default async function HomePage() {
@@ -110,15 +113,12 @@ export default async function HomePage() {
               </div>
             </div>
             <div className="bento-card rounded-3xl bg-white p-7">
-              <div className="flex items-end gap-1.5 mb-3">
+              <div className="flex items-end gap-1.5 mb-4">
                 <span className="text-[2.2rem] font-bold leading-none" style={{ color: ACCENT }}>8</span>
                 <span className="text-[#6e6e73] text-[14px] mb-1.5">개 생활 영역</span>
               </div>
-              <div className="w-full bg-[#f2f2f7] rounded-full h-2 mb-4 overflow-hidden">
-                <div className="h-2 rounded-full" style={{ width: '68%', background: ACCENT }} />
-              </div>
-              <p className="text-[16px] font-bold text-[#1d1d1f] mb-0.5">주 3회 발행</p>
-              <p className="text-[13px] text-[#6e6e73] leading-snug">생활비부터 안전까지 꾸준히 쌓입니다.</p>
+              <p className="text-[16px] font-bold text-[#1d1d1f] mb-0.5">필요할 때 발행</p>
+              <p className="text-[13px] text-[#6e6e73] leading-snug">정해진 스케줄 없이, 준비된 순간에 직접 발행합니다.</p>
             </div>
           </div>
 
