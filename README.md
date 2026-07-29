@@ -2,6 +2,8 @@
 
 혼자 사는 사람의 시간·돈·공간·안전을 최적화하는 생활 정보 블로그. Next.js 16 + Firebase + Gemini AI 기반이며, Cloudflare Pages에 정적 배포됩니다.
 
+배포는 GitHub Actions가 아니라 **Cloudflare Pages 자체의 Git 연동**이 담당합니다. `main` 브랜치에 푸시가 생기면(글 발행 워크플로가 커밋하는 것 포함) Cloudflare가 자동으로 감지해 빌드·배포합니다.
+
 글 발행은 **자동 스케줄 없이, GitHub Actions를 수동으로 실행할 때만** 이루어집니다. 원하는 시간에 Actions 탭에서 버튼을 눌러 발행하세요.
 
 ## 기술 스택
@@ -10,7 +12,7 @@
 - **스타일**: Tailwind CSS v4
 - **데이터베이스**: Firebase Firestore (조회수, 구독자)
 - **AI**: Google Gemini 2.0 Flash (콘텐츠 자동 생성)
-- **배포**: Cloudflare Pages (GitHub Actions CI/CD)
+- **배포**: Cloudflare Pages (Cloudflare 자체 Git 연동, push 시 자동 빌드·배포)
 
 ## 콘텐츠 전략
 
@@ -23,7 +25,7 @@
 3. 입력값 (모두 선택 사항, 비워두면 기본값 사용)
    - `count`: 이번에 생성할 글 개수 (기본 2개)
    - `category`: 특정 카테고리만 쓰고 싶으면 지정, 비워두면 `auto`로 8개 섹션을 순환하며 자동 선택
-4. 실행하면 AI가 주제를 스스로 정하고, `content/blog/`에 글을 커밋·푸시합니다 → 이 푸시가 배포 워크플로(`deploy.yml`)를 트리거해 Cloudflare Pages에 자동 반영됩니다.
+4. 실행하면 AI가 주제를 스스로 정하고, `content/blog/`에 글을 커밋·푸시합니다 → Cloudflare Pages의 Git 연동이 이 푸시를 감지해 자동으로 빌드·배포합니다.
 
 즉, **"Run workflow"를 누르는 순간이 곧 발행 시점**입니다. 정해진 시간에 자동으로 올라가지 않습니다.
 
@@ -64,15 +66,13 @@ npm run deploy
 
 ## GitHub Secrets 설정
 
-GitHub 저장소 → Settings → Secrets and variables → Actions 에서 아래 Secrets 등록:
+GitHub 저장소 → Settings → Secrets and variables → Actions 에서 아래 Secrets 등록. 이 값들은 "블로그 글 수동 발행" 워크플로(글 생성)에서만 쓰입니다 — 배포는 Cloudflare 자체 Git 연동이 담당하므로 `CLOUDFLARE_API_TOKEN` 같은 배포용 시크릿은 GitHub에 등록할 필요가 없습니다 (대신 아래 "Cloudflare Pages 초기 설정"에서 Cloudflare 대시보드에 직접 입력합니다).
 
 | Secret 이름 | 설명 | 발급처 |
 |-------------|------|--------|
 | `GEMINI_API_KEY` | Gemini API 키 | [Google AI Studio](https://aistudio.google.com) |
-| `CLOUDFLARE_API_TOKEN` | Cloudflare API 토큰 | Cloudflare → My Profile → API Tokens |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 ID | Cloudflare 대시보드 우측 하단 |
 | `NEXT_PUBLIC_ADMIN_HASH` | 관리자 비밀번호 SHA-256 해시 | `node -e "const c=require('crypto');console.log(c.createHash('sha256').update('비밀번호').digest('hex'))"` |
-| `ADMIN_PASSWORD` | (GitHub Actions용 참고값) | 직접 설정 |
+| `ADMIN_PASSWORD` | (참고값) | 직접 설정 |
 | `ADMIN_SECRET_TOKEN` | 관리자 세션 토큰 | `openssl rand -base64 32` |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase API 키 | Firebase 프로젝트 설정 |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase Auth 도메인 | Firebase 프로젝트 설정 |
@@ -80,9 +80,10 @@ GitHub 저장소 → Settings → Secrets and variables → Actions 에서 아�
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase Storage | Firebase 프로젝트 설정 |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase Sender ID | Firebase 프로젝트 설정 |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase App ID | Firebase 프로젝트 설정 |
-| `NEXT_PUBLIC_SITE_URL` | 사이트 URL | `https://your-project.pages.dev` |
+| `NEXT_PUBLIC_SITE_URL` | 사이트 URL | `https://honsamnote.co.kr` |
 | `NEXT_PUBLIC_SITE_NAME` | 블로그 이름 | 직접 설정 (예: `1인 가구 생활백서`) |
-| `CLOUDFLARE_ANALYTICS_TOKEN` | Cloudflare Analytics (선택) | Cloudflare Analytics |
+
+Cloudflare 대시보드에서 프로젝트 → Settings → Environment variables 에 위 `NEXT_PUBLIC_*` 값들과 `CLOUDFLARE_ANALYTICS_TOKEN`(선택)을 동일하게 등록해야 실제 빌드에 반영됩니다.
 
 ## Firebase Firestore 보안 규칙
 
