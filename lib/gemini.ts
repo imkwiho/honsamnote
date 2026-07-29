@@ -31,7 +31,7 @@ export interface TopicInput {
 }
 
 export async function generateBlogPost(topic: TopicInput): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  
   const needsDisclaimer = REVIEW_CATEGORIES.has(topic.categorySlug);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const prompt = `
