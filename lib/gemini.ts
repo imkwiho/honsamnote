@@ -31,9 +31,9 @@ export interface TopicInput {
 }
 
 export async function generateBlogPost(topic: TopicInput): Promise<string> {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  
   const needsDisclaimer = REVIEW_CATEGORIES.has(topic.categorySlug);
-
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const prompt = `
 당신은 "1인 가구 생활 최적화" 블로그의 전문 작가입니다.
 
