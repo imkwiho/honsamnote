@@ -10,6 +10,17 @@ const BLUE_LIGHT = '#e3edfc';
 // 강조 파랑 (바, 칩 등 소형 엑센트)
 const ACCENT = '#0071e3';
 
+const CATEGORY_ICON: Record<string, string> = {
+  cost: '💸',
+  food: '🍱',
+  storage: '📦',
+  cleaning: '🧺',
+  safety: '🚨',
+  housing: '🏠',
+  products: '🛒',
+  lifestyle: '🌤️',
+};
+
 const CATEGORIES = [
   { label: '생활비 최적화', href: '/category/cost', color: 'bg-blue-50 text-blue-600' },
   { label: '혼밥·식재료 관리', href: '/category/food', color: 'bg-sky-50 text-sky-600' },
@@ -66,22 +77,24 @@ export default async function HomePage() {
       <section className="px-4 sm:px-6 mb-5 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
-          {/* 카드 1 — 이런 문제를 다룹니다 */}
+          {/* 카드 1 — 실제 최신 글 4편 */}
           <div className="bento-card rounded-3xl flex flex-col" style={{ background: `linear-gradient(160deg, ${BLUE} 0%, ${BLUE_DARK} 100%)` }}>
             <div className="flex-1 p-7 pb-4">
               <div className="space-y-2.5">
-                {[
-                  { icon: '💸', text: '월급이 남지 않을 때 확인할 고정비' },
-                  { icon: '🧺', text: '퇴근 후 15분 원룸 청소 루틴' },
-                  { icon: '🚨', text: '혼자 아플 때 미리 준비할 것' },
-                  { icon: '📦', text: '식재료를 버리지 않는 1인 식단' },
-                ].map(({ icon, text }) => (
-                  <div key={text} className="flex items-center gap-3 rounded-2xl px-4 py-3"
-                    style={{ background: 'rgba(255,255,255,0.12)' }}>
-                    <span className="text-lg leading-none">{icon}</span>
-                    <span className="text-[13px] text-white font-medium">{text}</span>
+                {posts.length > 0 ? (
+                  posts.slice(0, 4).map(post => (
+                    <Link key={post.slug} href={`/blog/${post.slug}`}
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3 hover:bg-white/[0.08] transition-colors"
+                      style={{ background: 'rgba(255,255,255,0.12)' }}>
+                      <span className="text-lg leading-none shrink-0">{(post.category && CATEGORY_ICON[post.category]) || '📝'}</span>
+                      <span className="text-[13px] text-white font-medium line-clamp-1">{post.title}</span>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                    <span className="text-[13px] text-white/70 font-medium">첫 글이 발행되면 여기에 표시됩니다.</span>
                   </div>
-                ))}
+                )}
               </div>
             </div>
             <div className="px-7 pb-8 pt-2">
@@ -122,19 +135,18 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* 카드 3 — 판단 기준 제공 */}
+          {/* 카드 3 — 실제 발행 현황 */}
           <div className="flex flex-col gap-4">
             <div className="bento-card rounded-3xl bg-white p-7 flex-1">
               <div className="mb-5 space-y-3">
-                {[{ label: '살까 말까 판단 기준', val: 92 }, { label: '실패하기 쉬운 방법', val: 78 }, { label: '바로 쓰는 체크리스트', val: 88 }].map(({ label, val }) => (
-                  <div key={label}>
-                    <div className="flex justify-between text-[12px] text-[#6e6e73] mb-1">
-                      <span>{label}</span>
-                      <span className="font-semibold" style={{ color: ACCENT }}>{val}%</span>
-                    </div>
-                    <div className="h-1.5 bg-[#f2f2f7] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${val}%`, background: ACCENT }} />
-                    </div>
+                {[
+                  { label: '발행된 글', val: `${posts.length}편` },
+                  { label: '다루는 생활 영역', val: `${CATEGORIES.length}개` },
+                  { label: '최근 발행일', val: posts[0]?.date ?? '-' },
+                ].map(({ label, val }) => (
+                  <div key={label} className="flex items-center justify-between text-[13px] py-1.5 border-b border-[#f2f2f7] last:border-0">
+                    <span className="text-[#6e6e73]">{label}</span>
+                    <span className="font-bold" style={{ color: ACCENT }}>{val}</span>
                   </div>
                 ))}
               </div>
