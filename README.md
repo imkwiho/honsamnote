@@ -11,7 +11,7 @@
 - **프레임워크**: Next.js 16 (Static Export)
 - **스타일**: Tailwind CSS v4
 - **데이터베이스**: Firebase Firestore (조회수, 구독자)
-- **AI**: Google Gemini 2.0 Flash (콘텐츠 자동 생성)
+- **AI**: Google Gemini 2.5 Flash (콘텐츠 자동 생성)
 - **배포**: Cloudflare Pages (Cloudflare 자체 Git 연동, push 시 자동 빌드·배포)
 
 ## 콘텐츠 전략
@@ -23,17 +23,18 @@
 1. GitHub 저장소 → **Actions** 탭 → **"블로그 글 수동 발행"** 워크플로 선택
 2. **Run workflow** 클릭
 3. 입력값 (모두 선택 사항, 비워두면 기본값 사용)
-   - `count`: 이번에 생성할 글 개수 (기본 2개)
-   - `category`: 특정 카테고리만 쓰고 싶으면 지정, 비워두면 `auto`로 8개 섹션을 순환하며 자동 선택
-4. 실행하면 AI가 주제를 스스로 정하고, `content/blog/`에 글을 커밋·푸시합니다 → Cloudflare Pages의 Git 연동이 이 푸시를 감지해 자동으로 빌드·배포합니다.
+   - `per_category`: 카테고리당 생성할 글 개수 (기본 3개)
+   - `category`: 특정 카테고리만 쓰고 싶으면 지정, 비워두면 `auto`로 **8개 카테고리 전부**에 위 개수만큼씩 생성 (기본값 기준 8 × 3 = 24개)
+4. 실행하면 AI가 각 카테고리에서 주제를 스스로 정하고, `content/blog/`에 글을 커밋·푸시합니다 → Cloudflare Pages의 Git 연동이 이 푸시를 감지해 자동으로 빌드·배포합니다.
+   - Gemini API 요청 한도를 보호하기 위해 최대 4개씩 동시에 생성합니다 (전체가 한 번에 요청되지 않음).
 
 즉, **"Run workflow"를 누르는 순간이 곧 발행 시점**입니다. 정해진 시간에 자동으로 올라가지 않습니다.
 
 로컬에서 직접 생성해보고 싶다면:
 
 ```bash
-npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts 2 auto
-# 인자: [개수] [카테고리 슬러그 또는 auto]
+npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts 3 auto
+# 인자: [카테고리당 개수] [카테고리 슬러그 또는 auto]
 ```
 
 ### 주의: 비용·법률·안전 관련 글

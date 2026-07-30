@@ -22,7 +22,6 @@ export interface Topic {
 
 export interface TopicsData {
   categories: Category[];
-  cursor: number;
   topics: Topic[];
 }
 
@@ -40,32 +39,19 @@ export function getCategoryName(data: TopicsData, slug: string): string {
 }
 
 /**
- * count가 자동(카테고리 미지정)이면 카테고리를 순환하며 각기 다른 섹션에서
- * 주제를 균형 있게 골라온다. 특정 카테고리가 지정되면 그 안에서만 고른다.
+ * 카테고리가 지정되면 그 안에서 perCategory개를 고른다.
+ * 지정되지 않으면(auto) 8개 카테고리 전부에서 각각 perCategory개씩 고른다 —
+ * 한 번 실행할 때마다 전체 메뉴의 글이 골고루 올라가도록 하기 위함이다.
  */
-export function pickTopics(data: TopicsData, count: number, categoryFilter?: string): Topic[] {
+export function pickTopics(data: TopicsData, perCategory: number, categoryFilter?: string): Topic[] {
   if (categoryFilter) {
-    return data.topics.filter(t => t.category === categoryFilter && t.status === 'pending').slice(0, count);
+    return data.topics.filter(t => t.category === categoryFilter && t.status === 'pending').slice(0, perCategory);
   }
-
-  const order = data.categories.map(c => c.slug);
-  if (order.length === 0) return [];
 
   const selected: Topic[] = [];
-  const usedIds = new Set<number>();
-  let cursor = data.cursor ?? 0;
-  const maxAttempts = order.length * (count + 2);
-
-  for (let attempts = 0; selected.length < count && attempts < maxAttempts; attempts++) {
-    const slug = order[cursor % order.length];
-    cursor += 1;
-    const candidate = data.topics.find(t => t.category === slug && t.status === 'pending' && !usedIds.has(t.id));
-    if (candidate) {
-      selected.push(candidate);
-      usedIds.add(candidate.id);
-    }
+  for (const cat of data.categories) {
+    const picks = data.topics.filter(t => t.category === cat.slug && t.status === 'pending').slice(0, perCategory);
+    selected.push(...picks);
   }
-
-  data.cursor = cursor % order.length;
   return selected;
 }

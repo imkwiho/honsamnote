@@ -4,12 +4,12 @@ name: 블로그 글 수동 발행
 on:
   workflow_dispatch:
     inputs:
-      count:
-        description: '이번에 생성할 글 개수'
+      per_category:
+        description: '카테고리당 생성할 글 개수 (auto일 때는 8개 카테고리 전부에 각각 적용됨)'
         required: false
-        default: '2'
+        default: '3'
       category:
-        description: '카테고리 (auto = 8개 섹션을 순환하며 자동 선택)'
+        description: '카테고리 (auto = 8개 전체 메뉴에 위 개수만큼씩 생성)'
         required: false
         default: 'auto'
         type: choice
@@ -43,7 +43,7 @@ jobs:
       - run: npm ci
 
       - name: 글 자동 생성 (주제는 topics.json 에서 자동 선택)
-        run: npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts "${{ github.event.inputs.count || '2' }}" "${{ github.event.inputs.category || 'auto' }}"
+        run: npx ts-node --project tsconfig.scripts.json scripts/generate-post.ts "${{ github.event.inputs.per_category || '3' }}" "${{ github.event.inputs.category || 'auto' }}"
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 

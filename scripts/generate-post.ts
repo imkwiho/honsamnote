@@ -4,6 +4,8 @@ import matter from 'gray-matter';
 import { generateBlogPost } from '../lib/gemini';
 import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic } from '../lib/topics';
 
+const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
+
 async function generateOne(topic: Topic, categoryName: string, outDir: string, today: string): Promise<string> {
   console.log(`생성 시작: [${categoryName}] ${topic.seed}`);
 
@@ -30,11 +32,40 @@ async function generateOne(topic: Topic, categoryName: string, outDir: string, t
   return outPath;
 }
 
-async function main() {
-  const [, , countArg, categoryArg] = process.argv;
+interface Task {
+  topic: Topic;
+  categoryName: string;
+}
 
-  const countRaw = parseInt(countArg ?? '', 10);
-  const count = Number.isFinite(countRaw) && countRaw > 0 ? Math.min(countRaw, 10) : 2;
+// Promise.all로 전부 한 번에 쏘면 Gemini API 분당 요청 한도에 걸리기 쉬워서,
+// 동시에 MAX_CONCURRENCY개씩만 실행하는 워커 풀 방식으로 처리한다.
+async function runWithConcurrency(tasks: Task[], outDir: string, today: string): Promise<PromiseSettledResult<string>[]> {
+  const results: PromiseSettledResult<string>[] = new Array(tasks.length);
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < tasks.length) {
+      const i = cursor++;
+      const { topic, categoryName } = tasks[i];
+      try {
+        const value = await generateOne(topic, categoryName, outDir, today);
+        results[i] = { status: 'fulfilled', value };
+      } catch (reason) {
+        results[i] = { status: 'rejected', reason };
+      }
+    }
+  }
+
+  const workerCount = Math.min(MAX_CONCURRENCY, tasks.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
+async function main() {
+  const [, , perCategoryArg, categoryArg] = process.argv;
+
+  const perCategoryRaw = parseInt(perCategoryArg ?? '', 10);
+  const perCategory = Number.isFinite(perCategoryRaw) && perCategoryRaw > 0 ? Math.min(perCategoryRaw, 10) : 3;
   const categoryFilter = categoryArg && categoryArg !== 'auto' ? categoryArg : undefined;
 
   const data = loadTopics();
@@ -45,7 +76,7 @@ async function main() {
     process.exit(1);
   }
 
-  const selected = pickTopics(data, count, categoryFilter);
+  const selected = pickTopics(data, perCategory, categoryFilter);
 
   if (selected.length === 0) {
     console.log('생성할 대기 중인 주제가 없습니다. content/topics.json 에 새 주제를 추가해 주세요.');
@@ -56,12 +87,12 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const today = new Date().toISOString().split('T')[0];
+  const tasks = selected.map(topic => ({ topic, categoryName: getCategoryName(data, topic.category) }));
 
-  console.log(`${selected.length}개 글을 동시에 생성합니다...\n`);
+  const scope = categoryFilter ? `[${categoryFilter}] 카테고리에서 ${selected.length}개` : `전체 ${data.categories.length}개 카테고리에서 각 ${perCategory}개씩, 총 ${selected.length}개`;
+  console.log(`${scope} 글을 생성합니다 (동시 ${Math.min(MAX_CONCURRENCY, selected.length)}개씩 진행)...\n`);
 
-  const results = await Promise.allSettled(
-    selected.map(topic => generateOne(topic, getCategoryName(data, topic.category), outDir, today))
-  );
+  const results = await runWithConcurrency(tasks, outDir, today);
 
   // 성공한 주제만 topics.json에 반영 — 실패한 주제는 pending으로 남아 다음 실행 때 다시 시도된다.
   saveTopics(data);
