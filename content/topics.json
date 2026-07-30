@@ -76,21 +76,27 @@
       "category": "cost",
       "type": "foundation",
       "seed": "구독서비스 정리",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cost-5"
     },
     {
       "id": 6,
       "category": "cost",
       "type": "foundation",
       "seed": "1인 가구 보험 점검",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cost-6"
     },
     {
       "id": 7,
       "category": "cost",
       "type": "foundation",
       "seed": "관리비가 많이 나오는 이유",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cost-7"
     },
     {
       "id": 8,
@@ -140,21 +146,27 @@
       "category": "food",
       "type": "foundation",
       "seed": "배달음식 보관법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-food-13"
     },
     {
       "id": 14,
       "category": "food",
       "type": "foundation",
       "seed": "편의점 식사 조합",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-food-14"
     },
     {
       "id": 15,
       "category": "food",
       "type": "foundation",
       "seed": "1인용 밀키트 비교",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-food-15"
     },
     {
       "id": 16,
@@ -195,21 +207,27 @@
       "category": "storage",
       "type": "foundation",
       "seed": "주방 정리",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-storage-20"
     },
     {
       "id": 21,
       "category": "storage",
       "type": "foundation",
       "seed": "신발장 냄새 관리",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-storage-21"
     },
     {
       "id": 22,
       "category": "storage",
       "type": "foundation",
       "seed": "작은 냉장고 정리",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-storage-22"
     },
     {
       "id": 23,
@@ -257,21 +275,27 @@
       "category": "cleaning",
       "type": "foundation",
       "seed": "빨래 쉰 냄새 제거",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cleaning-28"
     },
     {
       "id": 29,
       "category": "cleaning",
       "type": "foundation",
       "seed": "침구 세탁 주기",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cleaning-29"
     },
     {
       "id": 30,
       "category": "cleaning",
       "type": "foundation",
       "seed": "원룸 먼지 줄이는 방법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-cleaning-30"
     },
     {
       "id": 31,
@@ -319,21 +343,27 @@
       "category": "safety",
       "type": "foundation",
       "seed": "가스 냄새가 날 때 대처법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-safety-36"
     },
     {
       "id": 37,
       "category": "safety",
       "type": "foundation",
       "seed": "화재 발생 시 행동요령",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-safety-37"
     },
     {
       "id": 38,
       "category": "safety",
       "type": "foundation",
       "seed": "택배 개인정보 보호",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-safety-38"
     },
     {
       "id": 39,
@@ -388,21 +418,27 @@
       "category": "housing",
       "type": "foundation",
       "seed": "이사 체크리스트",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-housing-45"
     },
     {
       "id": 46,
       "category": "housing",
       "type": "foundation",
       "seed": "보증금 반환 준비",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-housing-46"
     },
     {
       "id": 47,
       "category": "housing",
       "type": "foundation",
       "seed": "집주인에게 수리 요청하는 법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-housing-47"
     },
     {
       "id": 48,
@@ -450,21 +486,27 @@
       "category": "products",
       "type": "foundation",
       "seed": "음식물처리기 선택법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-products-53"
     },
     {
       "id": 54,
       "category": "products",
       "type": "foundation",
       "seed": "전기밥솥 선택 기준",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-products-54"
     },
     {
       "id": 55,
       "category": "products",
       "type": "foundation",
       "seed": "소형 냉동고 선택법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-products-55"
     },
     {
       "id": 56,
@@ -519,21 +561,27 @@
       "category": "lifestyle",
       "type": "foundation",
       "seed": "식사를 거르지 않는 방법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-lifestyle-62"
     },
     {
       "id": 63,
       "category": "lifestyle",
       "type": "foundation",
       "seed": "가족에게 안부를 알리는 시스템",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-lifestyle-63"
     },
     {
       "id": 64,
       "category": "lifestyle",
       "type": "foundation",
       "seed": "퇴근 후 시간을 낭비하지 않는 방법",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-30",
+      "publishedSlug": "2026-07-30-lifestyle-64"
     },
     {
       "id": 65,
