@@ -49,3 +49,70 @@ body {
 .animate-fade-up-1 { animation-delay: 0s; }
 .animate-fade-up-2 { animation-delay: 0.1s; }
 .animate-fade-up-3 { animation-delay: 0.2s; }
+
+/* 글 상세 페이지 본문 타이포그래피 */
+.article-prose {
+  --tw-prose-body: #2b2d31;
+  --tw-prose-headings: #1d1d1f;
+  --tw-prose-links: #0071e3;
+  --tw-prose-bold: #1d1d1f;
+  --tw-prose-counters: #6e6e73;
+  --tw-prose-bullets: #93c5fd;
+  --tw-prose-hr: #e5e5ea;
+  --tw-prose-quotes: #1d1d1f;
+  --tw-prose-quote-borders: #bfdbfe;
+  --tw-prose-code: #0a3d91;
+  font-size: 17px;
+  line-height: 1.85;
+}
+
+.article-prose h2 {
+  margin-top: 2.75em;
+  margin-bottom: 0.9em;
+  padding-top: 1.6em;
+  border-top: 1px solid #eef2f7;
+  font-size: 1.35em;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  scroll-margin-top: 5rem;
+}
+.article-prose > h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.article-prose p {
+  margin-top: 1.3em;
+  margin-bottom: 1.3em;
+}
+
+.article-prose ul,
+.article-prose ol {
+  margin-top: 1.1em;
+  margin-bottom: 1.1em;
+}
+.article-prose li {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+.article-prose strong {
+  font-weight: 700;
+}
+
+.article-prose blockquote {
+  font-style: normal;
+  border-left-width: 3px;
+}
+
+.article-prose hr {
+  margin: 3em 0;
+}
+
+@media (min-width: 640px) {
+  .article-prose {
+    font-size: 18px;
+    line-height: 1.9;
+  }
+}
