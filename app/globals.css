@@ -20,6 +20,15 @@ body {
   color: var(--foreground);
 }
 
+/* 모바일 상단 카테고리 메뉴의 스크롤바 숨김 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /* 벤토 카드 호버 효과 */
 .bento-card {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);

@@ -48,28 +48,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* 프로스티드 글래스 네비 */}
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-black/[0.06]"
           style={{ backdropFilter: 'saturate(180%) blur(20px)', background: 'rgba(234,243,255,0.85)' }}>
-          <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-[52px] flex items-center justify-between">
-            <Link href="/" className="text-[15px] font-bold tracking-tight text-[#1d1d1f] shrink-0">
-              {SITE_NAME}
-            </Link>
-            {/* 데스크탑 메뉴 */}
-            <div className="hidden lg:flex items-center gap-0.5">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <nav className="h-[52px] flex items-center justify-between">
+              <Link href="/" className="text-[15px] font-bold tracking-tight text-[#1d1d1f] shrink-0">
+                {SITE_NAME}
+              </Link>
+              {/* 데스크탑 메뉴 */}
+              <div className="hidden lg:flex items-center gap-0.5">
+                {navLinks.map(l => (
+                  <a key={l.href} href={l.href}
+                    className="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] whitespace-nowrap">
+                    {l.label}
+                  </a>
+                ))}
+              </div>
+              {/* 모바일·태블릿: 뉴스레터 버튼만 */}
+              <Link href="/#newsletter"
+                className="lg:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full shrink-0" style={{ background: '#0071e3' }}>
+                구독
+              </Link>
+            </nav>
+            {/* 모바일·태블릿: 맨 위에 오는 가로 스크롤 메뉴 */}
+            <div className="no-scrollbar lg:hidden flex items-center gap-1.5 overflow-x-auto pb-2.5 -mx-1 px-1">
               {navLinks.map(l => (
                 <a key={l.href} href={l.href}
-                  className="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] whitespace-nowrap">
+                  className="shrink-0 whitespace-nowrap text-[12.5px] font-medium text-[#3a3a3c] px-3 py-1.5 rounded-full bg-black/[0.045] hover:bg-black/[0.08] transition-colors">
                   {l.label}
                 </a>
               ))}
             </div>
-            {/* 모바일·태블릿: 뉴스레터 버튼만 */}
-            <Link href="/#newsletter"
-              className="lg:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full" style={{ background: '#0071e3' }}>
-              구독
-            </Link>
-          </nav>
+          </div>
         </header>
 
-        <main className="pt-[52px]">{children}</main>
+        <main className="pt-[100px] lg:pt-[52px]">{children}</main>
 
         <footer className="mt-20 border-t border-[#c7ddfb] py-10 px-6">
           <div className="max-w-6xl mx-auto">
