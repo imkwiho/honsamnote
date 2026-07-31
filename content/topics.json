@@ -643,7 +643,9 @@
       "category": "cleaning",
       "type": "problem",
       "seed": "화장실에 날벌레가 생겼을 때",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-cleaning-68"
     },
     {
       "id": 69,
@@ -668,49 +670,63 @@
       "category": "housing",
       "type": "problem",
       "seed": "집주인이 수리를 미룰 때",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-housing-71"
     },
     {
       "id": 72,
       "category": "safety",
       "type": "problem",
       "seed": "장기간 집을 비울 때",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-safety-72"
     },
     {
       "id": 73,
       "category": "safety",
       "type": "problem",
       "seed": "혼자 고열이 날 때",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-safety-73"
     },
     {
       "id": 74,
       "category": "cleaning",
       "type": "problem",
       "seed": "세탁기에서 냄새가 날 때",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-cleaning-74"
     },
     {
       "id": 75,
       "category": "products",
       "type": "comparison",
       "seed": "미니 건조기가 필요한 사람과 필요하지 않은 사람",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-products-75"
     },
     {
       "id": 76,
       "category": "products",
       "type": "comparison",
       "seed": "음식물처리기 방식별 장단점",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-products-76"
     },
     {
       "id": 77,
       "category": "products",
       "type": "comparison",
       "seed": "로봇청소기를 사도 집이 깨끗해지지 않는 이유",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-products-77"
     },
     {
       "id": 78,
@@ -724,7 +740,9 @@
       "category": "cleaning",
       "type": "comparison",
       "seed": "정기 청소서비스 비용과 직접 청소 비교",
-      "status": "pending"
+      "status": "published",
+      "publishedAt": "2026-07-31",
+      "publishedSlug": "2026-07-31-cleaning-79"
     },
     {
       "id": 80,
