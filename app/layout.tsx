@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
-import { Geist } from 'next/font/google';
+import { Geist, Gowun_Batang } from 'next/font/google';
 import Link from 'next/link';
 import SiteVisitTracker from '@/components/SiteVisitTracker';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'] });
+const serif = Gowun_Batang({ subsets: ['latin'], weight: ['700'], variable: '--font-serif' });
 
 const SITE_NAME = '1인 가구 생활백서';
 
@@ -39,32 +40,34 @@ const footerCategories = [
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko">
+    <html lang="ko" className={serif.variable}>
       <body className={`${geist.className} min-h-screen`}
-        style={{ background: '#eaf3ff', color: '#1d1d1f' }}>
+        style={{ background: '#faf6f0', color: '#33302b' }}>
 
         <SiteVisitTracker />
 
-        {/* 프로스티드 글래스 네비 */}
-        <header className="fixed top-0 left-0 right-0 z-50 border-b border-black/[0.06]"
-          style={{ backdropFilter: 'saturate(180%) blur(20px)', background: 'rgba(234,243,255,0.85)' }}>
+        {/* 미니멀 헤더 */}
+        <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#33302b]/[0.06]"
+          style={{ backdropFilter: 'saturate(160%) blur(20px)', background: 'rgba(250,246,240,0.85)' }}>
           <div className="max-w-6xl mx-auto px-4 sm:px-6">
             <nav className="h-[52px] flex items-center justify-between">
-              <Link href="/" className="text-[15px] font-bold tracking-tight text-[#1d1d1f] shrink-0">
+              <Link href="/" className="flex items-center gap-1.5 text-[15px] font-bold tracking-tight text-[#2f2c26] shrink-0"
+                style={{ fontFamily: 'var(--font-serif)' }}>
+                <span aria-hidden className="text-[#8a9a7a]">✦</span>
                 {SITE_NAME}
               </Link>
               {/* 데스크탑 메뉴 */}
               <div className="hidden lg:flex items-center gap-0.5">
                 {navLinks.map(l => (
                   <a key={l.href} href={l.href}
-                    className="text-[13px] text-[#6e6e73] hover:text-[#1d1d1f] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-black/[0.04] whitespace-nowrap">
+                    className="text-[13px] text-[#8a8377] hover:text-[#33302b] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-[#33302b]/[0.04] whitespace-nowrap">
                     {l.label}
                   </a>
                 ))}
               </div>
               {/* 모바일·태블릿: 뉴스레터 버튼만 */}
               <Link href="/#newsletter"
-                className="lg:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full shrink-0" style={{ background: '#0071e3' }}>
+                className="lg:hidden text-[12px] font-semibold text-white px-3 py-1.5 rounded-full shrink-0" style={{ background: '#7c8f6e' }}>
                 구독
               </Link>
             </nav>
@@ -72,7 +75,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="no-scrollbar lg:hidden flex items-center gap-1.5 overflow-x-auto pb-2.5 -mx-1 px-1">
               {navLinks.map(l => (
                 <a key={l.href} href={l.href}
-                  className="shrink-0 whitespace-nowrap text-[12.5px] font-medium text-[#3a3a3c] px-3 py-1.5 rounded-full bg-black/[0.045] hover:bg-black/[0.08] transition-colors">
+                  className="shrink-0 whitespace-nowrap text-[12.5px] font-medium text-[#5c5749] px-3 py-1.5 rounded-full bg-[#33302b]/[0.045] hover:bg-[#33302b]/[0.08] transition-colors">
                   {l.label}
                 </a>
               ))}
@@ -82,37 +85,37 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         <main className="pt-[100px] lg:pt-[52px]">{children}</main>
 
-        <footer className="mt-20 border-t border-[#c7ddfb] py-10 px-6">
+        <footer className="mt-20 border-t border-[#e6ddd0] py-10 px-6">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mb-8 text-[13px]">
               <div>
-                <p className="font-semibold text-[#1d1d1f] mb-3">카테고리</p>
+                <p className="font-semibold text-[#2f2c26] mb-3">카테고리</p>
                 {footerCategories.slice(0, 4).map(c => (
-                  <a key={c.href} href={c.href} className="block text-[#6e6e73] hover:text-[#1d1d1f] mb-1.5 transition-colors">{c.label}</a>
+                  <a key={c.href} href={c.href} className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{c.label}</a>
                 ))}
               </div>
               <div>
-                <p className="font-semibold text-[#1d1d1f] mb-3" aria-hidden>&nbsp;</p>
+                <p className="font-semibold text-[#2f2c26] mb-3" aria-hidden>&nbsp;</p>
                 {footerCategories.slice(4).map(c => (
-                  <a key={c.href} href={c.href} className="block text-[#6e6e73] hover:text-[#1d1d1f] mb-1.5 transition-colors">{c.label}</a>
+                  <a key={c.href} href={c.href} className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{c.label}</a>
                 ))}
               </div>
               <div>
-                <p className="font-semibold text-[#1d1d1f] mb-3">블로그</p>
+                <p className="font-semibold text-[#2f2c26] mb-3">블로그</p>
                 {[{ label: '전체 글', href: '/blog' }, { label: '뉴스레터', href: '/#newsletter' }].map(t => (
-                  <a key={t.href} href={t.href} className="block text-[#6e6e73] hover:text-[#1d1d1f] mb-1.5 transition-colors">{t.label}</a>
+                  <a key={t.href} href={t.href} className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{t.label}</a>
                 ))}
               </div>
               <div>
-                <p className="font-semibold text-[#1d1d1f] mb-3">정보</p>
+                <p className="font-semibold text-[#2f2c26] mb-3">정보</p>
                 {['운영 정책', '개인정보 처리', '문의'].map(t => (
-                  <a key={t} href="#" className="block text-[#6e6e73] hover:text-[#1d1d1f] mb-1.5 transition-colors">{t}</a>
+                  <a key={t} href="#" className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{t}</a>
                 ))}
               </div>
             </div>
-            <div className="border-t border-[#c7ddfb] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
-              <p className="text-[12px] text-[#aeaeb2]">© {new Date().getFullYear()} {SITE_NAME}. 혼자 사는 삶을 더 쉽게.</p>
-              <p className="text-[12px] text-[#aeaeb2]">Powered by Gemini AI</p>
+            <div className="border-t border-[#e6ddd0] pt-6 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <p className="text-[12px] text-[#a39c8c]">© {new Date().getFullYear()} {SITE_NAME}. 혼자 사는 삶을 더 쉽게.</p>
+              <p className="text-[12px] text-[#a39c8c]">Powered by Gemini AI</p>
             </div>
           </div>
         </footer>

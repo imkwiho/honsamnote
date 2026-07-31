@@ -68,8 +68,8 @@ export default function SubscribeForm({ dark = false }: { dark?: boolean }) {
         placeholder="이름 (선택)"
         className={`w-full px-4 py-3 rounded-xl text-sm outline-none transition-all ${
           dark
-            ? 'bg-white text-[#1d1d1f] placeholder-[#8e8e93] border-2 border-white/80 focus:border-white focus:ring-2 focus:ring-white/50'
-            : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-[#aeaeb2] border border-[#e5e5ea] focus:border-[#0071e3] focus:ring-2 focus:ring-blue-100'
+            ? 'bg-white text-[#33302b] placeholder-[#a39c8c] border-2 border-white/80 focus:border-white focus:ring-2 focus:ring-white/50'
+            : 'bg-[#f7f2e6] text-[#33302b] placeholder-[#b0a893] border border-[#ece4d6] focus:border-[#7c8f6e] focus:ring-2 focus:ring-[#eef1e6]'
         }`}
         disabled={status === 'loading'}
       />
@@ -82,8 +82,8 @@ export default function SubscribeForm({ dark = false }: { dark?: boolean }) {
           required
           className={`flex-1 px-4 py-3 rounded-xl text-sm outline-none transition-all ${
             dark
-              ? 'bg-white text-[#1d1d1f] placeholder-[#8e8e93] border-2 border-white/80 focus:border-white focus:ring-2 focus:ring-white/50'
-              : 'bg-[#f5f5f7] text-[#1d1d1f] placeholder-[#aeaeb2] border border-[#e5e5ea] focus:border-[#0071e3] focus:ring-2 focus:ring-blue-100'
+              ? 'bg-white text-[#33302b] placeholder-[#a39c8c] border-2 border-white/80 focus:border-white focus:ring-2 focus:ring-white/50'
+              : 'bg-[#f7f2e6] text-[#33302b] placeholder-[#b0a893] border border-[#ece4d6] focus:border-[#7c8f6e] focus:ring-2 focus:ring-[#eef1e6]'
           }`}
           disabled={status === 'loading'}
         />
@@ -92,17 +92,17 @@ export default function SubscribeForm({ dark = false }: { dark?: boolean }) {
           disabled={status === 'loading'}
           className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap ${
             dark
-              ? 'bg-white text-[#0071e3] hover:bg-[#f0f5ff] font-bold'
-              : 'bg-[#0071e3] text-white hover:bg-[#0058b0]'
+              ? 'bg-white text-[#4f5f45] hover:bg-[#f3f6f0] font-bold'
+              : 'bg-[#7c8f6e] text-white hover:bg-[#6b7d5e]'
           }`}
         >
           {status === 'loading' ? '처리 중…' : '구독하기'}
         </button>
       </div>
       {status === 'error' && (
-        <p className={`text-xs ${dark ? 'text-red-400' : 'text-red-500'}`}>{msg}</p>
+        <p className={`text-xs ${dark ? 'text-red-100' : 'text-red-500'}`}>{msg}</p>
       )}
-      <p className={`text-[11px] ${dark ? 'text-white/30' : 'text-[#aeaeb2]'}`}>
+      <p className={`text-[11px] ${dark ? 'text-white/40' : 'text-[#b0a893]'}`}>
         구독 신청 정보는 guihol@naver.com으로 전달됩니다. 언제든지 해지할 수 있습니다.
       </p>
     </form>

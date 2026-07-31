@@ -2,8 +2,8 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --background: #eaf3ff;
-  --foreground: #1d1d1f;
+  --background: #faf6f0;
+  --foreground: #33302b;
 }
 
 * {
@@ -61,16 +61,16 @@ body {
 
 /* 글 상세 페이지 본문 타이포그래피 */
 .article-prose {
-  --tw-prose-body: #2b2d31;
-  --tw-prose-headings: #1d1d1f;
-  --tw-prose-links: #0071e3;
-  --tw-prose-bold: #1d1d1f;
-  --tw-prose-counters: #6e6e73;
-  --tw-prose-bullets: #93c5fd;
-  --tw-prose-hr: #e5e5ea;
-  --tw-prose-quotes: #1d1d1f;
-  --tw-prose-quote-borders: #bfdbfe;
-  --tw-prose-code: #0a3d91;
+  --tw-prose-body: #403c34;
+  --tw-prose-headings: #2f2c26;
+  --tw-prose-links: #6b7d5e;
+  --tw-prose-bold: #2f2c26;
+  --tw-prose-counters: #8a8377;
+  --tw-prose-bullets: #b7c2a8;
+  --tw-prose-hr: #e6ddd0;
+  --tw-prose-quotes: #2f2c26;
+  --tw-prose-quote-borders: #d7dfc9;
+  --tw-prose-code: #4f5f45;
   font-size: 17px;
   line-height: 1.85;
 }
@@ -79,9 +79,10 @@ body {
   margin-top: 2.75em;
   margin-bottom: 0.9em;
   padding-top: 1.6em;
-  border-top: 1px solid #eef2f7;
-  font-size: 1.35em;
-  font-weight: 800;
+  border-top: 1px solid #ece4d6;
+  font-family: var(--font-serif);
+  font-size: 1.4em;
+  font-weight: 700;
   letter-spacing: -0.01em;
   scroll-margin-top: 5rem;
 }

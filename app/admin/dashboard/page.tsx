@@ -92,9 +92,9 @@ export default function AdminDashboardPage() {
 
       {/* 요약 카드 */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-blue-200 rounded-xl p-6 ring-1 ring-blue-100">
+        <div className="bg-white border border-[#c9d4bd] rounded-xl p-6 ring-1 ring-[#eef1e6]">
           <p className="text-sm text-gray-500 mb-1">전체 방문자 수</p>
-          <p className="text-3xl font-bold text-blue-600">{totalVisitors.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-[#5f7052]">{totalVisitors.toLocaleString()}</p>
         </div>
         <div className="bg-white border border-gray-200 rounded-xl p-6">
           <p className="text-sm text-gray-500 mb-1">전체 글 조회수</p>
@@ -116,7 +116,7 @@ export default function AdminDashboardPage() {
             {topPosts.map((post, i) => (
               <li key={post.slug} className="flex items-center gap-3 text-sm">
                 <span className="w-5 text-gray-400 text-right">{i + 1}</span>
-                <a href={`/blog/${post.slug}`} className="flex-1 text-gray-800 hover:text-blue-600 transition-colors truncate">
+                <a href={`/blog/${post.slug}`} className="flex-1 text-gray-800 hover:text-[#5f7052] transition-colors truncate">
                   {post.title}
                 </a>
                 <span className="text-gray-500 font-medium">{post.count.toLocaleString()}</span>
@@ -145,7 +145,7 @@ export default function AdminDashboardPage() {
                 <td className="py-2 pr-4 text-gray-700 text-right font-medium">{post.count.toLocaleString()}</td>
                 <td className="py-2 pr-4 text-gray-400">{post.date}</td>
                 <td className="py-2">
-                  <a href={`/blog/${post.slug}`} className="text-blue-500 hover:underline">보기</a>
+                  <a href={`/blog/${post.slug}`} className="text-[#6b7d5e] hover:underline">보기</a>
                 </td>
               </tr>
             ))}
