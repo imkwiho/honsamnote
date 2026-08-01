@@ -24,16 +24,37 @@ const TYPE_GUIDE: Record<TopicType, string> = {
 const REVIEW_CATEGORIES = new Set(['cost', 'housing', 'safety']);
 
 export interface TopicInput {
-  seed: string;
+  // seed가 있으면 정해진 소재로, 없으면 AI가 카테고리 안에서 새 소재를 스스로 골라 쓴다.
+  seed?: string;
   categorySlug: string;
   categoryName: string;
   type: TopicType;
+  // seed가 없을 때, 이미 다룬 제목들과 겹치지 않도록 참고시킨다.
+  avoidTitles?: string[];
+}
+
+function buildTopicSection(topic: TopicInput): string {
+  if (topic.seed) {
+    return `- 카테고리: ${topic.categoryName}
+- 소재 키워드: ${topic.seed}
+- 글 유형: ${topic.type} — ${TYPE_GUIDE[topic.type]}
+
+이 소재를 그대로 제목으로 쓰지 말고, "대상 + 상황 + 문제 + 해결 행동" 공식으로 구체적인 생활 장면이 드러나는 제목으로 바꾸세요.
+예: "원룸 청소법"(약함) → "퇴근 후 15분으로 원룸을 유지하는 청소 순서"(좋음).`;
+  }
+
+  const avoidList = (topic.avoidTitles ?? []).slice(0, 40);
+  return `- 카테고리: ${topic.categoryName}
+- 소재 키워드: 미리 정해진 소재가 없습니다. "${topic.categoryName}" 카테고리 안에서, 혼자 사는 사람이 실제로 겪을 법한 아직 다루지 않은 구체적인 생활 문제나 판단거리를 스스로 하나 골라 글을 쓰세요.
+- 글 유형: ${topic.type} — ${TYPE_GUIDE[topic.type]}
+${avoidList.length > 0 ? `\n이미 이 블로그에서 다룬 "${topic.categoryName}" 카테고리 글 제목들입니다. 아래와 겹치거나 너무 비슷한 주제는 피하고, 다른 장면·다른 문제를 다루세요:\n${avoidList.map(t => `- ${t}`).join('\n')}\n` : ''}
+제목은 "대상 + 상황 + 문제 + 해결 행동" 공식으로, 구체적인 생활 장면이 드러나게 쓰세요.
+예: "원룸 청소법"(약함) → "퇴근 후 15분으로 원룸을 유지하는 청소 순서"(좋음).`;
 }
 
 export async function generateBlogPost(topic: TopicInput): Promise<string> {
-  
   const needsDisclaimer = REVIEW_CATEGORIES.has(topic.categorySlug);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
   const prompt = `
 당신은 "1인 가구 생활 최적화" 블로그의 전문 작가입니다.
 
@@ -44,12 +65,7 @@ ${PERSONA}
 ${BLOG_IDENTITY}
 
 ## 이번 글의 소재
-- 카테고리: ${topic.categoryName}
-- 소재 키워드: ${topic.seed}
-- 글 유형: ${topic.type} — ${TYPE_GUIDE[topic.type]}
-
-이 소재를 그대로 제목으로 쓰지 말고, "대상 + 상황 + 문제 + 해결 행동" 공식으로 구체적인 생활 장면이 드러나는 제목으로 바꾸세요.
-예: "원룸 청소법"(약함) → "퇴근 후 15분으로 원룸을 유지하는 청소 순서"(좋음).
+${buildTopicSection(topic)}
 
 ## 글 구조 (반드시 이 7단계를 본문에 자연스러운 소제목으로 녹여낼 것)
 ${STRUCTURE}

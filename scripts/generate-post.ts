@@ -1,40 +1,47 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import matter from 'gray-matter';
 import { generateBlogPost } from '../lib/gemini';
-import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic } from '../lib/topics';
+import { getPostsByCategory } from '../lib/mdx';
+import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type TopicType } from '../lib/topics';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
+// 정해진 소재가 바닥났을 때, AI가 스스로 새 소재를 고를 글의 유형을 순환시켜 다양성을 준다.
+const AUTO_TYPE_CYCLE: TopicType[] = ['problem', 'comparison', 'foundation'];
 
-async function generateOne(topic: Topic, categoryName: string, outDir: string, today: string): Promise<string> {
-  console.log(`생성 시작: [${categoryName}] ${topic.seed}`);
+type Task =
+  | { mode: 'seeded'; topic: Topic; categoryName: string }
+  | { mode: 'auto'; category: string; categoryName: string; type: TopicType; avoidTitles: string[] };
 
-  const raw = await generateBlogPost({
-    seed: topic.seed,
-    categorySlug: topic.category,
-    categoryName,
-    type: topic.type,
-  });
+async function runTask(task: Task, outDir: string, today: string): Promise<string> {
+  const category = task.mode === 'seeded' ? task.topic.category : task.category;
+  const label = task.mode === 'seeded' ? task.topic.seed : '(AI가 새 소재 브레인스토밍)';
+  console.log(`생성 시작: [${task.categoryName}] ${label}`);
+
+  const raw = await generateBlogPost(
+    task.mode === 'seeded'
+      ? { seed: task.topic.seed, categorySlug: task.topic.category, categoryName: task.categoryName, type: task.topic.type }
+      : { categorySlug: task.category, categoryName: task.categoryName, type: task.type, avoidTitles: task.avoidTitles }
+  );
 
   const parsed = matter(raw);
-  parsed.data.category = topic.category;
-  parsed.data.categoryName = categoryName;
+  parsed.data.category = category;
+  parsed.data.categoryName = task.categoryName;
 
-  const filename = `${today}-${topic.category}-${topic.id}.mdx`;
+  const suffix = task.mode === 'seeded' ? String(task.topic.id) : `auto-${crypto.randomBytes(3).toString('hex')}`;
+  const filename = `${today}-${category}-${suffix}.mdx`;
   const outPath = path.join(outDir, filename);
   fs.writeFileSync(outPath, matter.stringify(parsed.content, parsed.data), 'utf-8');
 
-  topic.status = 'published';
-  topic.publishedAt = today;
-  topic.publishedSlug = filename.replace(/\.mdx$/, '');
+  if (task.mode === 'seeded') {
+    task.topic.status = 'published';
+    task.topic.publishedAt = today;
+    task.topic.publishedSlug = filename.replace(/\.mdx$/, '');
+  }
 
   console.log(`  완료: ${outPath}`);
   return outPath;
-}
-
-interface Task {
-  topic: Topic;
-  categoryName: string;
 }
 
 // Promise.all로 전부 한 번에 쏘면 Gemini API 분당 요청 한도에 걸리기 쉬워서,
@@ -46,10 +53,8 @@ async function runWithConcurrency(tasks: Task[], outDir: string, today: string):
   async function worker() {
     while (cursor < tasks.length) {
       const i = cursor++;
-      const { topic, categoryName } = tasks[i];
       try {
-        const value = await generateOne(topic, categoryName, outDir, today);
-        results[i] = { status: 'fulfilled', value };
+        results[i] = { status: 'fulfilled', value: await runTask(tasks[i], outDir, today) };
       } catch (reason) {
         results[i] = { status: 'rejected', reason };
       }
@@ -59,6 +64,29 @@ async function runWithConcurrency(tasks: Task[], outDir: string, today: string):
   const workerCount = Math.min(MAX_CONCURRENCY, tasks.length);
   await Promise.all(Array.from({ length: workerCount }, () => worker()));
   return results;
+}
+
+// 정해진 소재 풀에서 perCategory개를 못 채우면, 부족한 만큼 AI가 카테고리 안에서
+// 스스로 새 소재를 골라 쓰도록 채워 넣는다. 이렇게 소재가 바닥나도 매번 카테고리별
+// 개수가 항상 보장된다.
+async function buildTasksForCategory(
+  category: string,
+  categoryName: string,
+  perCategory: number,
+  data: ReturnType<typeof loadTopics>
+): Promise<Task[]> {
+  const seeded = pickTopics(data, perCategory, category);
+  const tasks: Task[] = seeded.map(topic => ({ mode: 'seeded', topic, categoryName }));
+
+  const deficit = perCategory - seeded.length;
+  if (deficit > 0) {
+    const avoidTitles = (await getPostsByCategory(category)).map(p => p.title);
+    for (let i = 0; i < deficit; i++) {
+      tasks.push({ mode: 'auto', category, categoryName, type: AUTO_TYPE_CYCLE[i % AUTO_TYPE_CYCLE.length], avoidTitles });
+    }
+  }
+
+  return tasks;
 }
 
 async function main() {
@@ -76,10 +104,16 @@ async function main() {
     process.exit(1);
   }
 
-  const selected = pickTopics(data, perCategory, categoryFilter);
+  const targetCategories = categoryFilter ? [categoryFilter] : data.categories.map(c => c.slug);
 
-  if (selected.length === 0) {
-    console.log('생성할 대기 중인 주제가 없습니다. content/topics.json 에 새 주제를 추가해 주세요.');
+  const tasks: Task[] = [];
+  for (const category of targetCategories) {
+    const categoryName = getCategoryName(data, category);
+    tasks.push(...(await buildTasksForCategory(category, categoryName, perCategory, data)));
+  }
+
+  if (tasks.length === 0) {
+    console.log('생성할 글이 없습니다.');
     return;
   }
 
@@ -87,10 +121,13 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const today = new Date().toISOString().split('T')[0];
-  const tasks = selected.map(topic => ({ topic, categoryName: getCategoryName(data, topic.category) }));
+  const seededCount = tasks.filter(t => t.mode === 'seeded').length;
+  const autoCount = tasks.length - seededCount;
 
-  const scope = categoryFilter ? `[${categoryFilter}] 카테고리에서 ${selected.length}개` : `전체 ${data.categories.length}개 카테고리에서 각 ${perCategory}개씩, 총 ${selected.length}개`;
-  console.log(`${scope} 글을 생성합니다 (동시 ${Math.min(MAX_CONCURRENCY, selected.length)}개씩 진행)...\n`);
+  console.log(
+    `${targetCategories.length}개 카테고리 × ${perCategory}개 = 총 ${tasks.length}개 글을 생성합니다 ` +
+    `(소재 지정 ${seededCount}개, AI 자동 브레인스토밍 ${autoCount}개, 동시 ${Math.min(MAX_CONCURRENCY, tasks.length)}개씩 진행)...\n`
+  );
 
   const results = await runWithConcurrency(tasks, outDir, today);
 
