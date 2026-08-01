@@ -1,5 +1,5 @@
 import { getAllPosts } from '@/lib/mdx';
-import Link from 'next/link';
+import PaginatedPostList from '@/components/PaginatedPostList';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -20,26 +20,7 @@ export default async function BlogIndexPage() {
           아직 발행된 글이 없습니다. GitHub Actions → &ldquo;블로그 글 수동 발행&rdquo; 워크플로를 실행해 보세요.
         </p>
       ) : (
-        <div className="space-y-4">
-          {posts.map(post => (
-            <Link key={post.slug} href={`/blog/${post.slug}`}
-              className="block bg-[#fffdf9] border border-[#ece4d6] rounded-2xl p-6 hover:border-[#7c8f6e] transition-colors">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                {post.categoryName && (
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#eef1e6] text-[#5f7052]">
-                    {post.categoryName}
-                  </span>
-                )}
-                {post.tags.slice(0, 2).map(tag => (
-                  <span key={tag} className="text-[10px] text-[#b0a893]">#{tag}</span>
-                ))}
-              </div>
-              <h2 className="text-[16px] font-bold text-[#2f2c26] mb-1.5">{post.title}</h2>
-              <p className="text-[13px] text-[#8a8377] mb-3 line-clamp-2">{post.description}</p>
-              <time className="text-xs text-[#b0a893]">{post.date}</time>
-            </Link>
-          ))}
-        </div>
+        <PaginatedPostList posts={posts} />
       )}
     </div>
   );

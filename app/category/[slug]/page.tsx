@@ -1,6 +1,6 @@
 import { getPostsByCategory } from '@/lib/mdx';
 import { loadTopics } from '@/lib/topics';
-import Link from 'next/link';
+import PaginatedPostList from '@/components/PaginatedPostList';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -37,16 +37,7 @@ export default async function CategoryPage({ params }: Props) {
       {posts.length === 0 ? (
         <p className="text-[#8a8377] text-sm">아직 이 카테고리에 발행된 글이 없습니다.</p>
       ) : (
-        <div className="space-y-4">
-          {posts.map(post => (
-            <Link key={post.slug} href={`/blog/${post.slug}`}
-              className="block bg-[#fffdf9] border border-[#ece4d6] rounded-2xl p-6 hover:border-[#7c8f6e] transition-colors">
-              <h2 className="text-[16px] font-bold text-[#2f2c26] mb-1.5">{post.title}</h2>
-              <p className="text-[13px] text-[#8a8377] mb-3 line-clamp-2">{post.description}</p>
-              <time className="text-xs text-[#b0a893]">{post.date}</time>
-            </Link>
-          ))}
-        </div>
+        <PaginatedPostList posts={posts} showCategory={false} />
       )}
     </div>
   );

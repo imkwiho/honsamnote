@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Gowun_Batang } from 'next/font/google';
 import Link from 'next/link';
 import SiteVisitTracker from '@/components/SiteVisitTracker';
+import { getAllPosts, getCategoryCounts } from '@/lib/mdx';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'] });
@@ -15,30 +16,33 @@ export const metadata: Metadata = {
 };
 
 const navLinks = [
-  { label: '전체 글', href: '/blog' },
-  { label: '생활비', href: '/category/cost' },
-  { label: '식재료', href: '/category/food' },
-  { label: '수납', href: '/category/storage' },
-  { label: '청소', href: '/category/cleaning' },
-  { label: '안전', href: '/category/safety' },
-  { label: '주거', href: '/category/housing' },
-  { label: '제품', href: '/category/products' },
-  { label: '관계', href: '/category/lifestyle' },
-  { label: '뉴스레터', href: '/#newsletter' },
+  { label: '전체 글', href: '/blog', countKey: 'all' },
+  { label: '생활비', href: '/category/cost', countKey: 'cost' },
+  { label: '식재료', href: '/category/food', countKey: 'food' },
+  { label: '수납', href: '/category/storage', countKey: 'storage' },
+  { label: '청소', href: '/category/cleaning', countKey: 'cleaning' },
+  { label: '안전', href: '/category/safety', countKey: 'safety' },
+  { label: '주거', href: '/category/housing', countKey: 'housing' },
+  { label: '제품', href: '/category/products', countKey: 'products' },
+  { label: '관계', href: '/category/lifestyle', countKey: 'lifestyle' },
+  { label: '뉴스레터', href: '/#newsletter', countKey: null },
 ];
 
 const footerCategories = [
-  { label: '생활비 최적화', href: '/category/cost' },
-  { label: '혼밥·식재료 관리', href: '/category/food' },
-  { label: '좁은 집과 수납', href: '/category/storage' },
-  { label: '청소·세탁·집안일', href: '/category/cleaning' },
-  { label: '안전·응급상황', href: '/category/safety' },
-  { label: '주거·계약·이사', href: '/category/housing' },
-  { label: '1인 가구 제품·서비스', href: '/category/products' },
-  { label: '관계·고립·생활 리듬', href: '/category/lifestyle' },
+  { label: '생활비 최적화', href: '/category/cost', countKey: 'cost' },
+  { label: '혼밥·식재료 관리', href: '/category/food', countKey: 'food' },
+  { label: '좁은 집과 수납', href: '/category/storage', countKey: 'storage' },
+  { label: '청소·세탁·집안일', href: '/category/cleaning', countKey: 'cleaning' },
+  { label: '안전·응급상황', href: '/category/safety', countKey: 'safety' },
+  { label: '주거·계약·이사', href: '/category/housing', countKey: 'housing' },
+  { label: '1인 가구 제품·서비스', href: '/category/products', countKey: 'products' },
+  { label: '관계·고립·생활 리듬', href: '/category/lifestyle', countKey: 'lifestyle' },
 ];
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const [allPosts, categoryCounts] = await Promise.all([getAllPosts(), getCategoryCounts()]);
+  const counts: Record<string, number> = { ...categoryCounts, all: allPosts.length };
+
   return (
     <html lang="ko" className={serif.variable}>
       <body className={`${geist.className} min-h-screen`}
@@ -60,8 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div className="hidden lg:flex items-center gap-0.5">
                 {navLinks.map(l => (
                   <a key={l.href} href={l.href}
-                    className="text-[13px] text-[#8a8377] hover:text-[#33302b] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-[#33302b]/[0.04] whitespace-nowrap">
+                    className="flex items-center gap-1 text-[13px] text-[#8a8377] hover:text-[#33302b] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-[#33302b]/[0.04] whitespace-nowrap">
                     {l.label}
+                    {l.countKey && counts[l.countKey] > 0 && (
+                      <span className="text-[10px] tabular-nums text-[#b0a893]">{counts[l.countKey]}</span>
+                    )}
                   </a>
                 ))}
               </div>
@@ -75,8 +82,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="no-scrollbar lg:hidden flex items-center gap-1.5 overflow-x-auto pb-2.5 -mx-1 px-1">
               {navLinks.map(l => (
                 <a key={l.href} href={l.href}
-                  className="shrink-0 whitespace-nowrap text-[12.5px] font-medium text-[#5c5749] px-3 py-1.5 rounded-full bg-[#33302b]/[0.045] hover:bg-[#33302b]/[0.08] transition-colors">
+                  className="shrink-0 flex items-center gap-1 whitespace-nowrap text-[12.5px] font-medium text-[#5c5749] px-3 py-1.5 rounded-full bg-[#33302b]/[0.045] hover:bg-[#33302b]/[0.08] transition-colors">
                   {l.label}
+                  {l.countKey && counts[l.countKey] > 0 && (
+                    <span className="text-[10.5px] tabular-nums text-[#a39c8c]">{counts[l.countKey]}</span>
+                  )}
                 </a>
               ))}
             </div>
@@ -91,13 +101,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <div>
                 <p className="font-semibold text-[#2f2c26] mb-3">카테고리</p>
                 {footerCategories.slice(0, 4).map(c => (
-                  <a key={c.href} href={c.href} className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{c.label}</a>
+                  <a key={c.href} href={c.href} className="flex items-center justify-between text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">
+                    <span>{c.label}</span>
+                    <span className="text-[11px] tabular-nums text-[#b0a893]">{counts[c.countKey] ?? 0}</span>
+                  </a>
                 ))}
               </div>
               <div>
                 <p className="font-semibold text-[#2f2c26] mb-3" aria-hidden>&nbsp;</p>
                 {footerCategories.slice(4).map(c => (
-                  <a key={c.href} href={c.href} className="block text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">{c.label}</a>
+                  <a key={c.href} href={c.href} className="flex items-center justify-between text-[#8a8377] hover:text-[#33302b] mb-1.5 transition-colors">
+                    <span>{c.label}</span>
+                    <span className="text-[11px] tabular-nums text-[#b0a893]">{counts[c.countKey] ?? 0}</span>
+                  </a>
                 ))}
               </div>
               <div>

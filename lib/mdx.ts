@@ -63,3 +63,12 @@ export async function getPostsByCategory(categorySlug: string): Promise<PostMeta
   const posts = await getAllPosts();
   return posts.filter(p => p.category === categorySlug);
 }
+
+export async function getCategoryCounts(): Promise<Record<string, number>> {
+  const posts = await getAllPosts();
+  const counts: Record<string, number> = {};
+  for (const post of posts) {
+    if (post.category) counts[post.category] = (counts[post.category] ?? 0) + 1;
+  }
+  return counts;
+}
