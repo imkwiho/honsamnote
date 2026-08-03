@@ -26,14 +26,35 @@ function stripTaskListMarker(line: string): string {
   return line.replace(/^(\s*[-*]\s+)\[[ xX]\]\s+/, '$1');
 }
 
+export interface ProcessArticleBodyOptions {
+  // AI가 지정한, 광고를 배치할 섹션 제목. 본문의 "## 소제목"과 (부분) 일치하면
+  // 그 섹션 바로 뒤에 CoupangPartnersCarousel 태그를 삽입한다.
+  affiliateSlotAfterHeading?: string | null;
+  affiliateSlotProps?: {
+    category?: string;
+    categoryName?: string;
+    aiTitle?: string;
+  };
+}
+
+export interface ProcessArticleBodyResult {
+  mdx: string;
+  toc: TocItem[];
+  // affiliateSlotAfterHeading이 지정되었고 실제로 본문 중간에 배치됐는지 여부.
+  // false면 호출자가 글 맨 끝에 광고를 배치하는 기본 동작으로 대체해야 한다.
+  affiliateSlotPlaced: boolean;
+}
+
 /**
  * "## 소제목" 단위로 본문을 나눠 목차를 추출하고, 결론/체크리스트/주의사항 섹션은
  * 강조 박스 JSX 태그로 감싼 MDX 문자열을 만들어 반환한다.
  */
-export function processArticleBody(markdown: string): { mdx: string; toc: TocItem[] } {
+export function processArticleBody(markdown: string, options: ProcessArticleBodyOptions = {}): ProcessArticleBodyResult {
   const lines = markdown.split('\n');
   const toc: TocItem[] = [];
   const blocks: string[] = [];
+  const targetHeading = options.affiliateSlotAfterHeading?.trim();
+  let affiliateSlotPlaced = false;
 
   let currentHeading: string | null = null;
   let buffer: string[] = [];
@@ -53,6 +74,18 @@ export function processArticleBody(markdown: string): { mdx: string; toc: TocIte
     } else {
       blocks.push(`<h2 id="${id}">${escapeAttr(currentHeading)}</h2>\n\n${body}`);
     }
+
+    if (!affiliateSlotPlaced && targetHeading && currentHeading.includes(targetHeading)) {
+      const p = options.affiliateSlotProps ?? {};
+      const attrs = [
+        p.category ? `category="${escapeAttr(p.category)}"` : '',
+        p.categoryName ? `categoryName="${escapeAttr(p.categoryName)}"` : '',
+        p.aiTitle ? `aiTitle="${escapeAttr(p.aiTitle)}"` : '',
+      ].filter(Boolean).join(' ');
+      blocks.push(`<CoupangPartnersCarousel ${attrs} />`);
+      affiliateSlotPlaced = true;
+    }
+
     index += 1;
   }
 
@@ -68,5 +101,5 @@ export function processArticleBody(markdown: string): { mdx: string; toc: TocIte
   }
   flush();
 
-  return { mdx: blocks.join('\n\n'), toc };
+  return { mdx: blocks.join('\n\n'), toc, affiliateSlotPlaced };
 }

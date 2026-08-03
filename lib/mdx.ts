@@ -17,6 +17,14 @@ export interface PostMeta {
 
 export interface Post extends PostMeta {
   content: string;
+  // AI 제휴 상품 분석 결과 (scripts/generate-post.ts가 생성 시점에 채워 넣음).
+  // 이 필드들이 없는 글(기존 글 등)은 카테고리 기본값으로 자연스럽게 대체된다.
+  affiliateKeywords?: string[];
+  affiliateProductGroup?: string;
+  affiliateConfidence?: number;
+  affiliateShouldInsert?: boolean;
+  affiliateInsertAfterHeading?: string;
+  affiliateAdTitle?: string;
 }
 
 export async function getAllPosts(): Promise<PostMeta[]> {
@@ -55,6 +63,12 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     keywords: data.keywords ?? [],
     category: data.category,
     categoryName: data.categoryName,
+    affiliateKeywords: data.affiliateKeywords,
+    affiliateProductGroup: data.affiliateProductGroup,
+    affiliateConfidence: data.affiliateConfidence,
+    affiliateShouldInsert: data.affiliateShouldInsert,
+    affiliateInsertAfterHeading: data.affiliateInsertAfterHeading,
+    affiliateAdTitle: data.affiliateAdTitle,
     content,
   };
 }

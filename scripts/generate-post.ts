@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import matter from 'gray-matter';
 import { generateBlogPost } from '../lib/gemini';
 import { getPostsByCategory } from '../lib/mdx';
+import { analyzePostForAffiliates } from '../lib/affiliateAnalysis';
 import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type TopicType } from '../lib/topics';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
@@ -28,6 +29,23 @@ async function runTask(task: Task, outDir: string, today: string): Promise<strin
   const parsed = matter(raw);
   parsed.data.category = category;
   parsed.data.categoryName = task.categoryName;
+
+  // 글 생성 직후, 이 글에 쿠팡 광고를 넣을지/어떤 상품 키워드·위치가 적절한지
+  // AI로 한 번 분석해 front matter에 저장한다 (실패해도 글 생성 자체는 계속 진행).
+  const affiliateAnalysis = await analyzePostForAffiliates({
+    title: parsed.data.title ?? '',
+    content: parsed.content,
+    categorySlug: category,
+    categoryName: task.categoryName,
+  });
+  if (affiliateAnalysis) {
+    parsed.data.affiliateKeywords = affiliateAnalysis.keywords.map(k => k.keyword);
+    parsed.data.affiliateProductGroup = affiliateAnalysis.keywords[0]?.productGroup;
+    parsed.data.affiliateConfidence = affiliateAnalysis.overallConfidence;
+    parsed.data.affiliateShouldInsert = affiliateAnalysis.shouldInsertAds;
+    if (affiliateAnalysis.insertAfterHeading) parsed.data.affiliateInsertAfterHeading = affiliateAnalysis.insertAfterHeading;
+    if (affiliateAnalysis.adTitle) parsed.data.affiliateAdTitle = affiliateAnalysis.adTitle;
+  }
 
   const suffix = task.mode === 'seeded' ? String(task.topic.id) : `auto-${crypto.randomBytes(3).toString('hex')}`;
   const filename = `${today}-${category}-${suffix}.mdx`;

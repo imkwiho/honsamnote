@@ -149,3 +149,53 @@ categoryName: "청소·세탁·집안일"
 ```
 
 수동으로 글을 추가할 때도 `category`(topics.json의 slug)와 `categoryName`을 넣어주면 카테고리 페이지(`/category/[slug]`)에 자동으로 노출됩니다.
+
+## AI 기반 쿠팡 상품 추천 시스템
+
+글마다 쿠팡 캐러셀을 넣을지, 어떤 문맥으로 보여줄지, 본문 어디에 배치할지를 AI가 자동으로 판단합니다. **캐러셀 ID는 992222 하나뿐**이라 "상품군마다 다른 캐러셀"을 매칭하는 게 아니라, "이 글에 광고가 어울리는가 + 어떤 제목/키워드로 보여줄까 + 본문 어디에 넣을까"를 AI가 결정합니다.
+
+### 동작 방식
+
+1. `scripts/generate-post.ts`가 글을 생성한 직후, `lib/affiliateAnalysis.ts`가 **같은 글의 제목·본문**을 Gemini로 한 번 더 분석합니다.
+2. 분석 결과(구체적 상품 키워드 최대 5개, 신뢰도, 광고 삽입 여부, 배치할 소제목, 광고 제목)를 아래처럼 front matter에 저장합니다. **이 값은 글이 생성될 때 한 번만 계산되고 그대로 굳습니다** — DB나 캐시가 없어도 "재분석 방지"가 자연히 성립합니다.
+
+```yaml
+affiliateKeywords: ["침대 밑 수납함", "압축팩"]
+affiliateProductGroup: "수납용품"
+affiliateConfidence: 0.86
+affiliateShouldInsert: true
+affiliateInsertAfterHeading: "해결 순서"
+affiliateAdTitle: "침대 밑 공간을 활용하는 수납용품"
+```
+
+3. 렌더링 시(`app/blog/[slug]/page.tsx`) `lib/affiliateAnalysis.ts`의 `shouldShowAffiliateAd()`가 신뢰도(기본 임계값 0.72)와 `affiliateShouldInsert`를 보고 광고 표시 여부를 정합니다. **이 필드가 아예 없는 글(이 기능 이전에 생성된 기존 글)은 항상 표시** — 기존 동작을 그대로 유지합니다.
+4. `affiliateInsertAfterHeading`이 본문의 실제 소제목과 일치하면 `lib/article.ts`가 그 섹션 바로 뒤에 캐러셀을 삽입합니다. 일치하는 소제목이 없으면 글 맨 끝(관련 글 위)에 배치합니다. 한 글에 광고는 항상 최대 1개입니다.
+
+### AI 분석이 광고를 넣지 않는 경우
+
+- 관계·감정(외로움/갈등/이별/직장 스트레스) 중심 글
+- 법률·행정 절차만 설명하는 글
+- 안전 카테고리에서 무기류·호신용품에 해당하는 키워드
+- 전체 신뢰도가 0.72 미만인 글
+
+### 설정 관리
+
+- `config/coupangAds.ts`: 광고 on/off, 위치별 활성화, `id`(992222)·`trackingCode`(AF1634685) — **바꾸지 마세요**
+- `data/coupangCategoryPresentation.ts`: AI 분석이 없는 글(기존 글)에 쓰이는 카테고리별 기본 제목·설명
+- `lib/coupangCategory.ts`: 카테고리 슬러그/이름이 달라도 8개 카테고리로 매칭하는 정규화 함수
+- `lib/affiliateAnalysis.ts`: Gemini 분석 프롬프트, zod 스키마 검증, 신뢰도 임계값(`MIN_RECOMMENDATION_CONFIDENCE`)
+
+### 테스트
+
+```bash
+npm run test
+```
+
+`shouldShowAffiliateAd`(신뢰도 임계값), `normalizeCategory`(카테고리 매칭), `processArticleBody`(본문 중간 삽입 위치)에 대한 단위 테스트가 있습니다.
+
+### 현재 구조상 구현하지 않은 것
+
+- **관리자 페이지에서 추천 결과 수정/캐러셀 등록 UI**: 이 사이트는 서버·DB가 없는 완전 정적 사이트(Cloudflare Pages)라 서버 인증이 필요한 CRUD를 만들 수 없습니다. 대신 front matter 필드를 직접 열어 고치면 됩니다(git으로 이미 버전관리됨).
+- **여러 캐러셀 ID 레지스트리**: 등록된 캐러셀이 992222 하나뿐이라 매칭할 대상이 없습니다. 상품군별로 다른 캐러셀을 쓰려면 쿠팡 파트너스 대시보드에서 캐러셀을 추가로 만들어 `config/coupangAds.ts`에 등록해야 합니다.
+- **배경 작업 큐/DB 캐싱**: 정적 파일 자체가 "캐시"이므로 별도 인프라 없이 동일한 효과를 냅니다.
+- **Lighthouse 자동 비교**: 배포 후 `npx lighthouse https://honsamnote.co.kr/blog/... `로 직접 측정해야 합니다 (이 환경엔 Lighthouse 실행 도구가 없습니다).

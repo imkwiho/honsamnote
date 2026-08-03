@@ -8,6 +8,10 @@ import { normalizeCategory } from '@/lib/coupangCategory';
 interface Props {
   category?: string;
   categoryName?: string;
+  // AI 콘텐츠 분석이 이 글에 맞춰 고른 제목/상품 키워드. 있으면 카테고리
+  // 기본 문구 대신 이 값을 우선 사용한다 (없는 글은 카테고리 기본값으로 대체).
+  aiTitle?: string;
+  aiKeywords?: string[];
 }
 
 // 쿠팡 파트너스 스니펫은 document.write로 동작하는 구형 광고 태그라, React
@@ -28,7 +32,7 @@ new PartnersCoupang.G({"id":${widgetId},"template":"${template}","trackingCode":
 </html>`;
 }
 
-export default function CoupangPartnersCarousel({ category, categoryName }: Props) {
+export default function CoupangPartnersCarousel({ category, categoryName, aiTitle, aiKeywords }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [failed, setFailed] = useState(false);
@@ -61,6 +65,11 @@ export default function CoupangPartnersCarousel({ category, categoryName }: Prop
   const presentation = COUPANG_CATEGORY_PRESENTATION[presentationKey] ?? COUPANG_CATEGORY_PRESENTATION.all;
   if (!presentation.enabled || failed) return null;
 
+  const title = aiTitle ?? presentation.title;
+  const description = aiKeywords && aiKeywords.length > 0
+    ? `이 글과 관련해 참고할 수 있는 상품: ${aiKeywords.slice(0, 3).join(', ')}`
+    : presentation.description;
+
   return (
     <section className="not-prose my-10" aria-label="쿠팡 파트너스 추천 상품">
       <div className="mb-3 rounded-xl border border-[#ece4d6] bg-[#f7f2e6] px-4 py-3">
@@ -73,8 +82,8 @@ export default function CoupangPartnersCarousel({ category, categoryName }: Prop
       </div>
 
       <div className="mb-3">
-        <p className="text-[14px] font-bold text-[#2f2c26]">{presentation.title}</p>
-        <p className="mt-1 text-[13px] text-[#6b6558] leading-relaxed">{presentation.description}</p>
+        <p className="text-[14px] font-bold text-[#2f2c26]">{title}</p>
+        <p className="mt-1 text-[13px] text-[#6b6558] leading-relaxed">{description}</p>
         {presentation.caution && (
           <p className="mt-1 text-[11.5px] text-[#a08f6a] leading-relaxed">{presentation.caution}</p>
         )}
