@@ -5,6 +5,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import ArticleHeader from '@/components/article/ArticleHeader';
 import TableOfContents from '@/components/article/TableOfContents';
 import ArticleFooter from '@/components/article/ArticleFooter';
+import CoupangBanner from '@/components/article/CoupangBanner';
 import SummaryBox from '@/components/article/SummaryBox';
 import ChecklistBox from '@/components/article/ChecklistBox';
 import WarningBox from '@/components/article/WarningBox';
@@ -60,6 +61,8 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="prose article-prose max-w-none">
           <MDXRemote source={mdx} components={mdxComponents} />
         </div>
+
+        <CoupangBanner />
       </article>
 
       <ArticleFooter category={post.category} categoryName={post.categoryName} currentSlug={post.slug} />
