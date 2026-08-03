@@ -1,6 +1,23 @@
 'use client';
 
-import Script from 'next/script';
+// 쿠팡 파트너스 스니펫은 document.write로 동작하는 구형 광고 태그라
+// React 컴포넌트 안에서 next/script로 직접 실행하면(하이드레이션 이후,
+// 즉 문서 로드가 끝난 뒤 실행됨) document.write가 무시되어 아무것도
+// 렌더링되지 않는다. iframe에 독립된 문서를 srcDoc으로 넣어, 그 문서가
+// 처음 파싱될 때 document.write가 정상 동작하도록 우회한다.
+const AD_WIDTH = 680;
+const AD_HEIGHT = 140;
+
+const IFRAME_DOC = `<!doctype html>
+<html>
+<head><style>body{margin:0;padding:0;}</style></head>
+<body>
+<script src="https://ads-partners.coupang.com/g.js"></script>
+<script>
+new PartnersCoupang.G({"id":992222,"template":"carousel","trackingCode":"AF1634685","width":"${AD_WIDTH}","height":"${AD_HEIGHT}","tsource":""});
+</script>
+</body>
+</html>`;
 
 export default function CoupangBanner() {
   return (
@@ -14,10 +31,14 @@ export default function CoupangBanner() {
         </p>
       </div>
       <div className="flex justify-center overflow-x-auto">
-        <Script src="https://ads-partners.coupang.com/g.js" strategy="afterInteractive" />
-        <Script id="coupang-partners-init" strategy="afterInteractive">
-          {`new PartnersCoupang.G({"id":992222,"template":"carousel","trackingCode":"AF1634685","width":"680","height":"140","tsource":""});`}
-        </Script>
+        <iframe
+          title="쿠팡 파트너스 광고"
+          srcDoc={IFRAME_DOC}
+          width={AD_WIDTH}
+          height={AD_HEIGHT}
+          style={{ border: 'none', display: 'block' }}
+          scrolling="no"
+        />
       </div>
     </div>
   );
