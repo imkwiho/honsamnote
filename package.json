@@ -8,8 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "typecheck:functions": "tsc --noEmit -p tsconfig.functions.json",
     "generate": "ts-node --project tsconfig.scripts.json scripts/generate-post.ts",
-    "deploy": "npm run build && wrangler pages deploy out"
+    "deploy": "npm run build && wrangler pages deploy out",
+    "db:migrate:local": "wrangler d1 execute honsamnote-analytics --local --file=migrations/0001_create_analytics_tables.sql",
+    "db:migrate:remote": "wrangler d1 execute honsamnote-analytics --remote --file=migrations/0001_create_analytics_tables.sql",
+    "pages:dev": "npm run build && wrangler pages dev out --d1 ANALYTICS_DB=honsamnote-analytics --compatibility-date=2024-01-01"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
@@ -24,6 +29,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260702.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

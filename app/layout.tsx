@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { Geist, Gowun_Batang } from 'next/font/google';
 import Link from 'next/link';
 import SiteVisitTracker from '@/components/SiteVisitTracker';
+import VisitorTracker from '@/components/analytics/VisitorTracker';
 import { getAllPosts, getCategoryCounts } from '@/lib/mdx';
 import './globals.css';
 
@@ -49,6 +51,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         style={{ background: '#faf6f0', color: '#33302b' }}>
 
         <SiteVisitTracker />
+        {/* useSearchParams를 쓰는 클라이언트 컴포넌트라 정적 내보내기(output: 'export')에서
+            빌드 오류가 나지 않도록 Suspense로 감싼다. 화면엔 아무것도 렌더링하지 않는다. */}
+        <Suspense fallback={null}>
+          <VisitorTracker />
+        </Suspense>
 
         {/* 미니멀 헤더 */}
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#33302b]/[0.06]"

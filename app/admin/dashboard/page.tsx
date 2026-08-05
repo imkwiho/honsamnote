@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getAllViewCounts, getTopPosts } from '@/lib/views';
 import { getSubscriberCount, getRecentSubscribers } from '@/lib/subscribers';
 import { getSiteVisitCount } from '@/lib/visits';
+import AnalyticsDashboard from '@/components/analytics/AnalyticsDashboard';
 
 interface PostMeta {
   slug: string;
@@ -90,7 +91,16 @@ export default function AdminDashboardPage() {
         <button onClick={logout} className="text-sm text-gray-500 hover:text-red-500 transition-colors">로그아웃</button>
       </div>
 
-      {/* 요약 카드 */}
+      {/* Cloudflare D1 방문자 통계 (신규) */}
+      <div className="mb-10">
+        <AnalyticsDashboard />
+      </div>
+
+      <div className="border-t border-gray-200 pt-8 mb-6">
+        <p className="text-[12px] font-semibold tracking-wide uppercase text-gray-400">기존 Firebase 통계</p>
+      </div>
+
+      {/* 요약 카드 (Firebase, 기존) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-[#c9d4bd] rounded-xl p-6 ring-1 ring-[#eef1e6]">
           <p className="text-sm text-gray-500 mb-1">전체 방문자 수</p>

@@ -37,6 +37,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# wrangler / cloudflare (local D1 상태, 로컬 시크릿)
+.wrangler/
+.dev.vars
+!.dev.vars.example
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

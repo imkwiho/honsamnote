@@ -8,3 +8,13 @@ bucket = "./out"
 from = "/*"
 to = "/404.html"
 status = 404
+
+# 방문자 분석용 D1 데이터베이스. database_id는 실제 생성 후 Cloudflare 대시보드
+# (Workers & Pages > D1 SQL Database > honsamnote-analytics)에서 확인한 값으로
+# 바꿔야 한다 — 이 값은 로컬 `wrangler d1`/`wrangler pages dev` 명령에서만 쓰이고,
+# Cloudflare Pages의 Git 연동 배포(대시보드에서 자동 빌드)는 이 파일이 아니라
+# Pages 프로젝트 Settings > Bindings에서 별도로 연결해야 실제 운영에 반영된다.
+[[d1_databases]]
+binding = "ANALYTICS_DB"
+database_name = "honsamnote-analytics"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"

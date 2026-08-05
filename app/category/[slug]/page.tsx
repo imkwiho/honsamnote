@@ -1,6 +1,7 @@
 import { getPostsByCategory } from '@/lib/mdx';
 import { loadTopics } from '@/lib/topics';
 import PaginatedPostList from '@/components/PaginatedPostList';
+import AnalyticsMeta from '@/components/analytics/AnalyticsMeta';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
@@ -31,6 +32,7 @@ export default async function CategoryPage({ params }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
+      <AnalyticsMeta contentType="category" category={slug} title={category.name} />
       <p className="text-[12px] font-semibold tracking-widest uppercase text-[#b0a893] mb-2">카테고리</p>
       <h1 className="text-2xl mb-8 text-[#2f2c26]" style={{ fontFamily: 'var(--font-serif)' }}>{category.name}</h1>
 

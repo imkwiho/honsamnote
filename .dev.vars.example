@@ -1,0 +1,17 @@
+# 로컬 wrangler pages dev용 환경변수 예시. 이 파일을 복사해 .dev.vars로 저장하세요
+# (.dev.vars는 git에 커밋되지 않습니다).
+#
+# cp .dev.vars.example .dev.vars
+
+# 관리자 통계 API 서버 검증용 시크릿. app/admin/login에서 쓰는
+# NEXT_PUBLIC_ADMIN_HASH와 "같은 값"으로 맞추세요(같은 비밀번호의 SHA-256 해시).
+# 생성법: node -e "const c=require('crypto');console.log(c.createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
+ADMIN_AUTH_HASH=your_sha256_hash_here
+
+# 선택: 기본값을 바꾸고 싶을 때만 설정
+# ANALYTICS_ENABLED=true
+# ANALYTICS_ACTIVE_WINDOW_MINUTES=5
+# ANALYTICS_SESSION_TIMEOUT_MINUTES=30
+# ANALYTICS_DUPLICATE_VIEW_SECONDS=30
+# ANALYTICS_RETENTION_DAYS=365
+# SITE_ORIGIN=https://honsamnote.co.kr

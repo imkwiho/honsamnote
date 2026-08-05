@@ -7,6 +7,7 @@ import ArticleHeader from '@/components/article/ArticleHeader';
 import TableOfContents from '@/components/article/TableOfContents';
 import ArticleFooter from '@/components/article/ArticleFooter';
 import CoupangPartnersCarousel from '@/components/CoupangPartnersCarousel';
+import AnalyticsMeta from '@/components/analytics/AnalyticsMeta';
 import SummaryBox from '@/components/article/SummaryBox';
 import ChecklistBox from '@/components/article/ChecklistBox';
 import WarningBox from '@/components/article/WarningBox';
@@ -66,6 +67,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <AnalyticsMeta contentType="post" category={post.category} postSlug={post.slug} postId={post.slug} title={post.title} />
       <article>
         <ArticleHeader
           title={post.title}
