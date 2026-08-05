@@ -55,7 +55,8 @@ export default async function BlogPostPage({ params }: Props) {
   });
 
   const { mdx, toc, affiliateSlotsPlaced } = processArticleBody(post.content, {
-    affiliateSlotAfterHeadings: adEnabled ? post.affiliateInsertAfterHeadings : undefined,
+    affiliateAdsEnabled: adEnabled,
+    affiliateSlotAfterHeadings: post.affiliateInsertAfterHeadings,
     affiliateSlotTitles: post.affiliateAdTitles,
     affiliateSlotProps: {
       category: post.category,
