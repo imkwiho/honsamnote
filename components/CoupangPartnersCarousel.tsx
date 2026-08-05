@@ -1,8 +1,10 @@
 'use client';
 
 import { useLayoutEffect, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { coupangAdSettings } from '@/config/coupangAds';
 import { COUPANG_CATEGORY_PRESENTATION } from '@/data/coupangCategoryPresentation';
+import { COUPANG_CATEGORY_BANNERS } from '@/data/coupangCategoryBanners';
 import { normalizeCategory } from '@/lib/coupangCategory';
 
 interface Props {
@@ -42,13 +44,20 @@ export default function CoupangPartnersCarousel({ category, categoryName, aiTitl
   const [nearViewport, setNearViewport] = useState(false);
 
   const { width, height } = coupangAdSettings;
+  const presentationKey = normalizeCategory(category, categoryName);
+  // 카테고리에 매칭되는 실제 상품군 배너(고정 이미지+링크)가 있으면 그걸
+  // 쓰고, 없는 카테고리(청소/안전/관계)는 기존 범용 동적 캐러셀로 대체된다.
+  const banner = COUPANG_CATEGORY_BANNERS[presentationKey];
 
   // 컨테이너 실측 폭에 맞춰 광고 전체(iframe)를 CSS transform으로 축소한다.
   // 쿠팡 캐러셀은 680x140 고정 크리에이티브라, 자르거나 내부 레이아웃을
   // 바꾸지 않으면서 모바일에서 가로 스크롤 없이 전체가 보이게 하는 방법이다.
   // 스크롤 여부와 무관하게 레이아웃 크기이므로 뷰포트 진입 전에도 측정된다
   // (덕분에 로딩 전에도 정확한 높이의 자리(스켈레톤)를 미리 확보해 CLS를 막는다).
+  // 정적 이미지 배너(banner)는 <img>가 자체적으로 반응형(CSS만으로) 처리되므로
+  // 이 스케일 측정이 필요 없다.
   useLayoutEffect(() => {
+    if (banner) return;
     if (!wrapRef.current) return;
     const el = wrapRef.current;
 
@@ -63,10 +72,12 @@ export default function CoupangPartnersCarousel({ category, categoryName, aiTitl
     const resizeObserver = new ResizeObserver(updateScale);
     resizeObserver.observe(el);
     return () => resizeObserver.disconnect();
-  }, [width]);
+  }, [width, banner]);
 
   // 실제 쿠팡 SDK 요청(iframe 로드)은 광고 영역이 뷰포트에 가까워질 때만 시작한다.
+  // 정적 이미지 배너는 <img loading="lazy">가 브라우저 자체 지연 로딩을 하므로 불필요.
   useEffect(() => {
+    if (banner) return;
     if (!wrapRef.current || typeof IntersectionObserver === 'undefined') {
       setNearViewport(true); // IntersectionObserver 미지원 환경은 즉시 로드로 대체
       return;
@@ -83,11 +94,10 @@ export default function CoupangPartnersCarousel({ category, categoryName, aiTitl
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [banner]);
 
   if (!coupangAdSettings.enabled || !coupangAdSettings.postBottomEnabled) return null;
 
-  const presentationKey = normalizeCategory(category, categoryName);
   const presentation = COUPANG_CATEGORY_PRESENTATION[presentationKey] ?? COUPANG_CATEGORY_PRESENTATION.all;
   if (!presentation.enabled || failed) return null;
 
@@ -115,28 +125,44 @@ export default function CoupangPartnersCarousel({ category, categoryName, aiTitl
         )}
       </div>
 
-      <div
-        ref={wrapRef}
-        style={{ width: '100%', maxWidth: `${width}px`, margin: '0 auto', height: height * scale, overflow: 'hidden' }}
-      >
-        {nearViewport ? (
-          <iframe
-            title="쿠팡 파트너스 추천 상품 캐러셀"
-            srcDoc={buildIframeDoc()}
-            width={width}
-            height={height}
-            scrolling="no"
-            style={{ border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }}
-            onError={() => setFailed(true)}
-          />
-        ) : (
-          <div
-            aria-hidden
-            className="h-full w-full animate-pulse rounded-lg bg-[#ece4d6]/60"
-            style={{ width, transform: `scale(${scale})`, transformOrigin: 'top left' }}
-          />
-        )}
-      </div>
+      {banner ? (
+        <div style={{ width: '100%', maxWidth: `${banner.width}px`, margin: '0 auto' }}>
+          <a href={banner.href} target="_blank" rel="noopener" referrerPolicy="unsafe-url">
+            <Image
+              src={banner.imgSrc}
+              alt={title}
+              width={banner.width}
+              height={banner.height}
+              unoptimized
+              style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 8 }}
+              onError={() => setFailed(true)}
+            />
+          </a>
+        </div>
+      ) : (
+        <div
+          ref={wrapRef}
+          style={{ width: '100%', maxWidth: `${width}px`, margin: '0 auto', height: height * scale, overflow: 'hidden' }}
+        >
+          {nearViewport ? (
+            <iframe
+              title="쿠팡 파트너스 추천 상품 캐러셀"
+              srcDoc={buildIframeDoc()}
+              width={width}
+              height={height}
+              scrolling="no"
+              style={{ border: 0, display: 'block', transform: `scale(${scale})`, transformOrigin: 'top left' }}
+              onError={() => setFailed(true)}
+            />
+          ) : (
+            <div
+              aria-hidden
+              className="h-full w-full animate-pulse rounded-lg bg-[#ece4d6]/60"
+              style={{ width, transform: `scale(${scale})`, transformOrigin: 'top left' }}
+            />
+          )}
+        </div>
+      )}
     </section>
   );
 }
