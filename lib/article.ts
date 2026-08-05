@@ -27,22 +27,24 @@ function stripTaskListMarker(line: string): string {
 }
 
 export interface ProcessArticleBodyOptions {
-  // AI가 지정한, 광고를 배치할 섹션 제목. 본문의 "## 소제목"과 (부분) 일치하면
-  // 그 섹션 바로 뒤에 CoupangPartnersCarousel 태그를 삽입한다.
-  affiliateSlotAfterHeading?: string | null;
+  // AI가 지정한, 광고를 배치할 섹션 제목들(최대 4개). 본문의 "## 소제목"과
+  // (부분) 일치하면 그 섹션 바로 뒤에 CoupangPartnersCarousel 태그를 삽입한다.
+  affiliateSlotAfterHeadings?: string[];
+  // affiliateSlotAfterHeadings와 같은 순서·개수의 슬롯별 광고 제목.
+  affiliateSlotTitles?: string[];
   affiliateSlotProps?: {
     category?: string;
     categoryName?: string;
-    aiTitle?: string;
   };
 }
 
 export interface ProcessArticleBodyResult {
   mdx: string;
   toc: TocItem[];
-  // affiliateSlotAfterHeading이 지정되었고 실제로 본문 중간에 배치됐는지 여부.
-  // false면 호출자가 글 맨 끝에 광고를 배치하는 기본 동작으로 대체해야 한다.
-  affiliateSlotPlaced: boolean;
+  // 실제로 본문 중간에 배치된 광고 슬롯 개수. 요청한 개수보다 적게 배치될 수 있다
+  // (일치하는 소제목이 없는 경우). 0이면 호출자가 글 맨 끝에 하나 배치하는
+  // 기본 동작으로 대체해야 한다.
+  affiliateSlotsPlaced: number;
 }
 
 /**
@@ -53,8 +55,9 @@ export function processArticleBody(markdown: string, options: ProcessArticleBody
   const lines = markdown.split('\n');
   const toc: TocItem[] = [];
   const blocks: string[] = [];
-  const targetHeading = options.affiliateSlotAfterHeading?.trim();
-  let affiliateSlotPlaced = false;
+  const targetHeadings = (options.affiliateSlotAfterHeadings ?? []).map(h => h.trim()).filter(Boolean);
+  const usedTargets = new Set<string>();
+  let affiliateSlotsPlaced = 0;
 
   let currentHeading: string | null = null;
   let buffer: string[] = [];
@@ -75,15 +78,18 @@ export function processArticleBody(markdown: string, options: ProcessArticleBody
       blocks.push(`<h2 id="${id}">${escapeAttr(currentHeading)}</h2>\n\n${body}`);
     }
 
-    if (!affiliateSlotPlaced && targetHeading && currentHeading.includes(targetHeading)) {
+    const matchedIndex = targetHeadings.findIndex(t => !usedTargets.has(t) && currentHeading!.includes(t));
+    if (matchedIndex !== -1) {
+      usedTargets.add(targetHeadings[matchedIndex]);
       const p = options.affiliateSlotProps ?? {};
+      const slotTitle = options.affiliateSlotTitles?.[matchedIndex];
       const attrs = [
         p.category ? `category="${escapeAttr(p.category)}"` : '',
         p.categoryName ? `categoryName="${escapeAttr(p.categoryName)}"` : '',
-        p.aiTitle ? `aiTitle="${escapeAttr(p.aiTitle)}"` : '',
+        slotTitle ? `aiTitle="${escapeAttr(slotTitle)}"` : '',
       ].filter(Boolean).join(' ');
       blocks.push(`<CoupangPartnersCarousel ${attrs} />`);
-      affiliateSlotPlaced = true;
+      affiliateSlotsPlaced += 1;
     }
 
     index += 1;
@@ -101,5 +107,5 @@ export function processArticleBody(markdown: string, options: ProcessArticleBody
   }
   flush();
 
-  return { mdx: blocks.join('\n\n'), toc, affiliateSlotPlaced };
+  return { mdx: blocks.join('\n\n'), toc, affiliateSlotsPlaced };
 }

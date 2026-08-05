@@ -46,20 +46,20 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
-  // AI가 이 글을 분석해서 광고를 넣을지, 어떤 문맥으로 보여줄지 결정한 값
-  // (scripts/generate-post.ts가 생성 시점에 front matter에 저장). 이 값이
-  // 없는 글(기존 글 등)은 카테고리 기본값 + "항상 표시"로 자연스럽게 대체된다.
+  // AI가 이 글을 분석해서 광고를 넣을지, 몇 개를 어떤 문맥·위치로 보여줄지
+  // 결정한 값 (scripts/generate-post.ts가 생성 시점에 front matter에 저장).
+  // 이 값이 없는 글(기존 글 등)은 카테고리 기본값 + "항상 표시 1개"로 대체된다.
   const adEnabled = shouldShowAffiliateAd({
     shouldInsertAds: post.affiliateShouldInsert,
     confidence: post.affiliateConfidence,
   });
 
-  const { mdx, toc, affiliateSlotPlaced } = processArticleBody(post.content, {
-    affiliateSlotAfterHeading: adEnabled ? post.affiliateInsertAfterHeading : null,
+  const { mdx, toc, affiliateSlotsPlaced } = processArticleBody(post.content, {
+    affiliateSlotAfterHeadings: adEnabled ? post.affiliateInsertAfterHeadings : undefined,
+    affiliateSlotTitles: post.affiliateAdTitles,
     affiliateSlotProps: {
       category: post.category,
       categoryName: post.categoryName,
-      aiTitle: post.affiliateAdTitle,
     },
   });
 
@@ -82,12 +82,12 @@ export default async function BlogPostPage({ params }: Props) {
           <MDXRemote source={mdx} components={mdxComponents} />
         </div>
 
-        {/* 본문 중간에 이미 배치됐다면 끝에서 또 렌더링하지 않는다 (글당 최대 1개). */}
-        {adEnabled && !affiliateSlotPlaced && (
+        {/* 본문 중간에 하나도 못 넣었을 때만 끝에 기본 1개를 배치한다 (글당 최대 개수는 config에서 관리). */}
+        {adEnabled && affiliateSlotsPlaced === 0 && (
           <CoupangPartnersCarousel
             category={post.category}
             categoryName={post.categoryName}
-            aiTitle={post.affiliateAdTitle}
+            aiTitle={post.affiliateAdTitles?.[0]}
             aiKeywords={post.affiliateKeywords}
           />
         )}

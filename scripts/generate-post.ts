@@ -43,8 +43,8 @@ async function runTask(task: Task, outDir: string, today: string): Promise<strin
     parsed.data.affiliateProductGroup = affiliateAnalysis.keywords[0]?.productGroup;
     parsed.data.affiliateConfidence = affiliateAnalysis.overallConfidence;
     parsed.data.affiliateShouldInsert = affiliateAnalysis.shouldInsertAds;
-    if (affiliateAnalysis.insertAfterHeading) parsed.data.affiliateInsertAfterHeading = affiliateAnalysis.insertAfterHeading;
-    if (affiliateAnalysis.adTitle) parsed.data.affiliateAdTitle = affiliateAnalysis.adTitle;
+    if (affiliateAnalysis.insertAfterHeadings.length > 0) parsed.data.affiliateInsertAfterHeadings = affiliateAnalysis.insertAfterHeadings;
+    if (affiliateAnalysis.adTitles.length > 0) parsed.data.affiliateAdTitles = affiliateAnalysis.adTitles;
   }
 
   const suffix = task.mode === 'seeded' ? String(task.topic.id) : `auto-${crypto.randomBytes(3).toString('hex')}`;

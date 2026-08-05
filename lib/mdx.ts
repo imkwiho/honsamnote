@@ -23,8 +23,8 @@ export interface Post extends PostMeta {
   affiliateProductGroup?: string;
   affiliateConfidence?: number;
   affiliateShouldInsert?: boolean;
-  affiliateInsertAfterHeading?: string;
-  affiliateAdTitle?: string;
+  affiliateInsertAfterHeadings?: string[];
+  affiliateAdTitles?: string[];
 }
 
 export async function getAllPosts(): Promise<PostMeta[]> {
@@ -67,8 +67,8 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     affiliateProductGroup: data.affiliateProductGroup,
     affiliateConfidence: data.affiliateConfidence,
     affiliateShouldInsert: data.affiliateShouldInsert,
-    affiliateInsertAfterHeading: data.affiliateInsertAfterHeading,
-    affiliateAdTitle: data.affiliateAdTitle,
+    affiliateInsertAfterHeadings: data.affiliateInsertAfterHeadings,
+    affiliateAdTitles: data.affiliateAdTitles,
     content,
   };
 }
