@@ -7,6 +7,7 @@ import { isExcludedPath } from '@/lib/analytics/validateEvent';
 
 const HEARTBEAT_INTERVAL_MS = 60_000;
 const DISABLE_FLAG_KEY = 'honsamnote_disable_analytics';
+const ADMIN_CHECK_CACHE_KEY = 'honsamnote_admin_check';
 
 interface PageMeta {
   contentType?: string;
@@ -35,17 +36,44 @@ function deriveFallbackMeta(pathname: string): PageMeta {
   return { contentType: 'page' };
 }
 
-/** 개인정보를 확인할 수 있는 관리자 로그인 상태이거나, 수동으로 추적을 껐으면 true. */
-function isTrackingDisabled(): boolean {
+// 관리자 로그인 세션은 HttpOnly 쿠키라 클라이언트 JS가 직접 읽을 수 없다.
+// 그래서 탭당 한 번만 서버(/api/admin/session)에 물어보고 그 결과를
+// sessionStorage에 캐시해, 페이지를 옮겨 다닐 때마다 다시 묻지 않는다.
+let cachedIsAdmin: boolean | null = null;
+
+async function isAdminSession(): Promise<boolean> {
+  if (cachedIsAdmin !== null) return cachedIsAdmin;
+  try {
+    const cached = window.sessionStorage.getItem(ADMIN_CHECK_CACHE_KEY);
+    if (cached === '1' || cached === '0') {
+      cachedIsAdmin = cached === '1';
+      return cachedIsAdmin;
+    }
+  } catch {
+    // ignore
+  }
+  try {
+    const res = await fetch('/api/admin/session');
+    cachedIsAdmin = res.ok;
+  } catch {
+    cachedIsAdmin = false;
+  }
+  try {
+    window.sessionStorage.setItem(ADMIN_CHECK_CACHE_KEY, cachedIsAdmin ? '1' : '0');
+  } catch {
+    // ignore
+  }
+  return cachedIsAdmin;
+}
+
+/** 수동으로 추적을 껐거나(즉시 확인 가능), 관리자 로그인 상태(서버 확인 필요)면 true. */
+async function isTrackingDisabled(): Promise<boolean> {
   try {
     if (window.localStorage.getItem(DISABLE_FLAG_KEY) === 'true') return true;
-    const auth = window.localStorage.getItem('admin_auth');
-    const expires = Number(window.localStorage.getItem('admin_auth_expires') ?? 0);
-    if (auth && Date.now() < expires) return true;
   } catch {
-    // localStorage 접근 불가 환경은 추적을 막지 않는다(관리자가 아닌 일반 방문자로 간주).
+    // localStorage 접근 불가 환경은 이 조건만 건너뛴다.
   }
-  return false;
+  return isAdminSession();
 }
 
 function sendBeaconOrFetch(url: string, payload: unknown): void {
@@ -83,50 +111,62 @@ export default function VisitorTracker() {
 
   // 경로가 바뀔 때마다 page_view 전송.
   useEffect(() => {
-    try {
-      if (typeof window === 'undefined') return;
-      if (isExcludedPath(pathname)) return;
-      if (isTrackingDisabled()) return;
+    let cancelled = false;
 
-      const meta = readPageMeta();
-      const fallback = deriveFallbackMeta(pathname);
+    async function run() {
+      try {
+        if (typeof window === 'undefined') return;
+        if (isExcludedPath(pathname)) return;
+        if (await isTrackingDisabled()) return;
+        if (cancelled) return;
 
-      const visitorId = getVisitorId();
-      const { sessionId } = getOrRotateSessionId();
-      if (!visitorId || !sessionId) return;
+        const meta = readPageMeta();
+        const fallback = deriveFallbackMeta(pathname);
 
-      sendBeaconOrFetch('/api/analytics/track', {
-        visitorId,
-        sessionId,
-        pathname,
-        pageTitle: meta.title ?? document.title,
-        contentType: meta.contentType ?? fallback.contentType,
-        category: meta.category ?? fallback.category,
-        postSlug: meta.postSlug,
-        postId: meta.postId,
-        referrer: document.referrer || undefined,
-        utmSource: searchParams?.get('utm_source') ?? undefined,
-        utmMedium: searchParams?.get('utm_medium') ?? undefined,
-        utmCampaign: searchParams?.get('utm_campaign') ?? undefined,
-      });
-    } catch {
-      // 통계 오류가 방문자에게 보이면 안 된다.
+        const visitorId = getVisitorId();
+        const { sessionId } = getOrRotateSessionId();
+        if (!visitorId || !sessionId) return;
+
+        sendBeaconOrFetch('/api/analytics/track', {
+          visitorId,
+          sessionId,
+          pathname,
+          pageTitle: meta.title ?? document.title,
+          contentType: meta.contentType ?? fallback.contentType,
+          category: meta.category ?? fallback.category,
+          postSlug: meta.postSlug,
+          postId: meta.postId,
+          referrer: document.referrer || undefined,
+          utmSource: searchParams?.get('utm_source') ?? undefined,
+          utmMedium: searchParams?.get('utm_medium') ?? undefined,
+          utmCampaign: searchParams?.get('utm_campaign') ?? undefined,
+        });
+      } catch {
+        // 통계 오류가 방문자에게 보이면 안 된다.
+      }
     }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- searchParams는 값 비교가 아닌 참조라 매 렌더 바뀔 수 있어 의도적으로 뺌
   }, [pathname]);
 
   // heartbeat: 탭이 보이는 동안 60초마다, 숨겨지면 중단, 다시 보이면 즉시 1회 + 재개.
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (isTrackingDisabled()) return;
 
     let intervalId: number | null = null;
+    let stopped = false;
 
-    function sendHeartbeat() {
+    async function sendHeartbeat() {
       try {
         if (document.visibilityState !== 'visible') return;
         if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
         if (isExcludedPath(pathnameRef.current)) return;
+        if (await isTrackingDisabled()) return;
+        if (stopped) return;
         const visitorId = getVisitorId();
         const { sessionId } = getOrRotateSessionId();
         if (!visitorId || !sessionId) return;
@@ -159,6 +199,7 @@ export default function VisitorTracker() {
     window.addEventListener('online', handleVisibilityChange);
 
     return () => {
+      stopped = true;
       stopInterval();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('pagehide', stopInterval);

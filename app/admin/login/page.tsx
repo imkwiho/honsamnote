@@ -3,39 +3,36 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-async function sha256(text: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // 비밀번호는 클라이언트에서 해싱하거나 저장하지 않는다. HTTPS로 서버에
+  // 그대로 전달하면, 서버(Cloudflare Pages Function)가 해시로 바꿔 시크릿과
+  // 비교하고, 성공 시 HttpOnly 세션 쿠키를 내려준다 — 그 쿠키는 이 페이지의
+  // JS도 읽을 수 없다.
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const inputHash = await sha256(password);
-      // NEXT_PUBLIC_ADMIN_HASH: 미리 해싱된 비밀번호 (원문 노출 없음)
-      // 생성: node -e "require('crypto').createHash('sha256').update('비밀번호').digest('hex') |> console.log"
-      const expectedHash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
-      if (!expectedHash) {
-        setError('관리자 설정이 필요합니다. NEXT_PUBLIC_ADMIN_HASH 환경변수를 설정하세요.');
-        return;
-      }
-      if (inputHash === expectedHash) {
-        localStorage.setItem('admin_auth', inputHash);
-        localStorage.setItem('admin_auth_expires', String(Date.now() + 24 * 60 * 60 * 1000));
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const json = await res.json().catch(() => null);
+      if (res.ok && json?.ok) {
         router.push('/admin/dashboard');
+      } else if (res.status === 503) {
+        setError('관리자 비밀번호가 아직 설정되지 않았습니다. Cloudflare 환경변수 ADMIN_AUTH_HASH를 설정하세요.');
       } else {
-        setError('비밀번호가 올바르지 않습니다.');
+        setError(json?.error ?? '비밀번호가 올바르지 않습니다.');
       }
     } catch {
-      setError('오류가 발생했습니다.');
+      setError('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
     }

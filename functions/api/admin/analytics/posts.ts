@@ -24,7 +24,7 @@ function sinceDateFor(period: Period): string | null {
 // duration 이벤트를 추가로 보내야 한다 — 탭을 여러 개 열어두거나 브라우저를
 // 백그라운드에 둔 경우 값이 왜곡되기 쉬워 신뢰도가 낮다고 판단해 제외했다.
 export async function onRequestGet({ request, env }: Context): Promise<Response> {
-  const denied = requireAdmin(request, env);
+  const denied = await requireAdmin(request, env);
   if (denied) return denied;
   if (!env.ANALYTICS_DB) return jsonError('D1 데이터베이스가 연결되어 있지 않습니다.', 503);
 

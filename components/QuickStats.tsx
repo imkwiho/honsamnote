@@ -12,13 +12,17 @@ export default function QuickStats() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('admin_auth');
-      if (raw) {
-        const { expiry } = JSON.parse(raw);
-        if (Date.now() < expiry) setIsAdmin(true);
-      }
-    } catch {}
+    // 서버에 로그인 상태를 물어본다 — 세션 쿠키가 HttpOnly라 클라이언트에서
+    // 직접 확인할 수 없다.
+    let cancelled = false;
+    fetch('/api/admin/session')
+      .then(res => {
+        if (!cancelled && res.ok) setIsAdmin(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleOpen() {

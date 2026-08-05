@@ -3,8 +3,8 @@
 #
 # cp .dev.vars.example .dev.vars
 
-# 관리자 통계 API 서버 검증용 시크릿. app/admin/login에서 쓰는
-# NEXT_PUBLIC_ADMIN_HASH와 "같은 값"으로 맞추세요(같은 비밀번호의 SHA-256 해시).
+# 관리자 로그인(POST /api/admin/login)과 관리자 통계 API가 함께 쓰는 시크릿.
+# 값은 "관리자 비밀번호의 SHA-256 해시"입니다 — 비밀번호 원문이 아닙니다.
 # 생성법: node -e "const c=require('crypto');console.log(c.createHash('sha256').update('YOUR_PASSWORD').digest('hex'))"
 ADMIN_AUTH_HASH=your_sha256_hash_here
 

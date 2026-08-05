@@ -12,7 +12,7 @@ interface Context {
 const GROUP_ORDER: ReferrerGroup[] = ['google', 'naver_daum_bing', 'kakao', 'sns', 'direct', 'other'];
 
 export async function onRequestGet({ request, env }: Context): Promise<Response> {
-  const denied = requireAdmin(request, env);
+  const denied = await requireAdmin(request, env);
   if (denied) return denied;
   if (!env.ANALYTICS_DB) return jsonError('D1 데이터베이스가 연결되어 있지 않습니다.', 503);
 

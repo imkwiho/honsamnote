@@ -1,25 +1,11 @@
 'use client';
 
-// 기존 관리자 로그인(app/admin/login)이 localStorage에 저장해둔 비밀번호
-// SHA-256 해시를 그대로 x-admin-auth 헤더로 실어 보낸다. 서버(Cloudflare Pages
-// Function)는 이 값을 별도 시크릿(ADMIN_AUTH_HASH)과 비교해 검증한다 —
-// URL만 알아도 접근되는 게 아니라 이 헤더가 없으면 401을 받는다.
-function getAdminAuthHeader(): string | null {
-  try {
-    const auth = window.localStorage.getItem('admin_auth');
-    const expires = Number(window.localStorage.getItem('admin_auth_expires') ?? 0);
-    if (!auth || Date.now() > expires) return null;
-    return auth;
-  } catch {
-    return null;
-  }
-}
-
+// 로그인 시 서버가 발급한 HttpOnly 세션 쿠키가 동일 출처 요청에는 브라우저가
+// 자동으로 실어 보내므로, 여기서 별도로 인증 헤더를 붙일 필요가 없다(그 쿠키는
+// 애초에 이 클라이언트 코드가 읽을 수도 없다). 서버가 쿠키를 검증해 401을
+// 주면 그대로 에러로 처리한다.
 export async function fetchAdminAnalytics<T>(path: string): Promise<T> {
-  const hash = getAdminAuthHeader();
-  if (!hash) throw new Error('관리자 인증 정보가 없습니다. 다시 로그인해주세요.');
-
-  const res = await fetch(path, { headers: { 'x-admin-auth': hash } });
+  const res = await fetch(path);
   let json: { ok: boolean; data?: T; error?: string };
   try {
     json = await res.json();

@@ -12,7 +12,7 @@ interface Context {
 
 // 개인정보 없음: visitorId는 앞 8자리만 노출한다(전체 값은 서버 밖으로 나가지 않음).
 export async function onRequestGet({ request, env }: Context): Promise<Response> {
-  const denied = requireAdmin(request, env);
+  const denied = await requireAdmin(request, env);
   if (denied) return denied;
   if (!env.ANALYTICS_DB) return jsonError('D1 데이터베이스가 연결되어 있지 않습니다.', 503);
 

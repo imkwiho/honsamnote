@@ -36,12 +36,20 @@ export default function AdminDashboardPage() {
   const [recentSubs, setRecentSubs] = useState<Subscriber[]>([]);
 
   useEffect(() => {
-    const auth = localStorage.getItem('admin_auth');
-    const expires = Number(localStorage.getItem('admin_auth_expires') ?? 0);
-    const expectedHash = process.env.NEXT_PUBLIC_ADMIN_HASH ?? '';
-    if (!auth || Date.now() > expires || (expectedHash && auth !== expectedHash)) {
-      router.push('/admin/login');
-      return;
+    // localStorage 대신 서버에 현재 로그인 상태를 물어본다 — 로그인 시
+    // 발급되는 세션 쿠키가 HttpOnly라 클라이언트 JS는 직접 확인할 수 없다.
+    async function checkSessionThenLoad() {
+      try {
+        const res = await fetch('/api/admin/session');
+        if (!res.ok) {
+          router.push('/admin/login');
+          return;
+        }
+      } catch {
+        router.push('/admin/login');
+        return;
+      }
+      await load();
     }
 
     async function load() {
@@ -71,12 +79,15 @@ export default function AdminDashboardPage() {
         setLoading(false);
       }
     }
-    load();
+    checkSessionThenLoad();
   }, [router]);
 
-  function logout() {
-    localStorage.removeItem('admin_auth');
-    localStorage.removeItem('admin_auth_expires');
+  async function logout() {
+    try {
+      await fetch('/api/admin/logout', { method: 'POST' });
+    } catch {
+      // 네트워크 오류가 나도 어차피 로그인 화면으로 보낸다.
+    }
     router.push('/admin/login');
   }
 
