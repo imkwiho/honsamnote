@@ -6,6 +6,7 @@ import { generateBlogPost } from '../lib/gemini';
 import { getPostsByCategory } from '../lib/mdx';
 import { analyzePostForAffiliates } from '../lib/affiliateAnalysis';
 import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type TopicType } from '../lib/topics';
+import { sanitizeMdxContent } from '../lib/mdxSanitize';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
 // 정해진 소재가 바닥났을 때, AI가 스스로 새 소재를 고를 글의 유형을 순환시켜 다양성을 준다.
@@ -27,6 +28,7 @@ async function runTask(task: Task, outDir: string, today: string): Promise<strin
   );
 
   const parsed = matter(raw);
+  parsed.content = sanitizeMdxContent(parsed.content);
   parsed.data.category = category;
   parsed.data.categoryName = task.categoryName;
 
