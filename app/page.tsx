@@ -2,6 +2,7 @@ import { getAllPosts } from '@/lib/mdx';
 import Link from 'next/link';
 import SubscribeForm from '@/components/SubscribeForm';
 import QuickStats from '@/components/QuickStats';
+import WebsiteJsonLd from '@/components/seo/WebsiteJsonLd';
 
 // 미니멀 세이지 팔레트
 const SAGE = '#7c8f6e';
@@ -38,6 +39,7 @@ export default async function HomePage() {
 
   return (
     <div>
+      <WebsiteJsonLd />
 
       {/* ══ ① 최상단 뉴스레터 배너 ══ */}
       <section className="px-4 sm:px-6 pt-8 pb-2 max-w-6xl mx-auto">

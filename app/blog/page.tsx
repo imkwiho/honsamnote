@@ -1,10 +1,25 @@
 import { getAllPosts } from '@/lib/mdx';
 import PaginatedPostList from '@/components/PaginatedPostList';
+import { SITE_NAME, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS } from '@/lib/seo';
 import type { Metadata } from 'next';
 
+const TITLE = '전체 글';
+const DESCRIPTION = `혼자 사는 삶에 실제로 도움이 되는 글을 한곳에 모았습니다 — ${SITE_NAME}에 발행된 모든 글.`;
+
 export const metadata: Metadata = {
-  title: '전체 글',
-  description: '1인 가구 생활백서에 발행된 모든 글',
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: '/blog/' },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    url: '/blog/',
+    siteName: SITE_NAME,
+    title: TITLE,
+    description: DESCRIPTION,
+    images: [{ url: DEFAULT_OG_IMAGE, ...DEFAULT_OG_IMAGE_DIMENSIONS, alt: TITLE }],
+  },
+  twitter: { card: 'summary_large_image', title: TITLE, description: DESCRIPTION, images: [DEFAULT_OG_IMAGE] },
 };
 
 export default async function BlogIndexPage() {

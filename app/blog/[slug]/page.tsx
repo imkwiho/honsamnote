@@ -11,6 +11,8 @@ import AnalyticsMeta from '@/components/analytics/AnalyticsMeta';
 import SummaryBox from '@/components/article/SummaryBox';
 import ChecklistBox from '@/components/article/ChecklistBox';
 import WarningBox from '@/components/article/WarningBox';
+import ArticleJsonLd from '@/components/seo/ArticleJsonLd';
+import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS } from '@/lib/seo';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -32,7 +34,37 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   try {
     const post = await getPostBySlug(slug);
-    return { title: post.title, description: post.description };
+    const canonicalPath = `/blog/${slug}/`;
+    const publishedTime = post.date ? new Date(post.date).toISOString() : undefined;
+    const modifiedTime = post.updatedAt ? new Date(post.updatedAt).toISOString() : publishedTime;
+
+    return {
+      title: post.title,
+      description: post.description,
+      keywords: post.keywords,
+      alternates: { canonical: canonicalPath },
+      robots: { index: true, follow: true },
+      openGraph: {
+        type: 'article',
+        url: canonicalPath,
+        siteName: SITE_NAME,
+        locale: SITE_LOCALE,
+        title: post.title,
+        description: post.description,
+        publishedTime,
+        modifiedTime,
+        authors: [SITE_NAME],
+        section: post.categoryName,
+        tags: post.tags,
+        images: [{ url: DEFAULT_OG_IMAGE, ...DEFAULT_OG_IMAGE_DIMENSIONS, alt: post.title }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: post.title,
+        description: post.description,
+        images: [DEFAULT_OG_IMAGE],
+      },
+    };
   } catch {
     return {};
   }
@@ -68,6 +100,16 @@ export default async function BlogPostPage({ params }: Props) {
   return (
     <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
       <AnalyticsMeta contentType="post" category={post.category} postSlug={post.slug} postId={post.slug} title={post.title} />
+      <ArticleJsonLd
+        title={post.title}
+        description={post.description}
+        slug={post.slug}
+        date={post.date}
+        updatedAt={post.updatedAt}
+        category={post.category}
+        categoryName={post.categoryName}
+        tags={post.tags}
+      />
       <article>
         <ArticleHeader
           title={post.title}

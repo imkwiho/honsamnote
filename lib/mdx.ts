@@ -9,6 +9,9 @@ export interface PostMeta {
   title: string;
   description: string;
   date: string;
+  // 글을 실제로 고쳐 쓴 경우에만 front matter에 넣는 선택 필드. 없으면 date와
+  // 같다고 본다(발행 이후 수정한 적이 없다는 뜻이므로 사실과 다르지 않다).
+  updatedAt?: string;
   tags: string[];
   keywords?: string[];
   category?: string;
@@ -39,6 +42,7 @@ export async function getAllPosts(): Promise<PostMeta[]> {
       title: data.title ?? slug,
       description: data.description ?? '',
       date: data.date ?? '',
+      updatedAt: data.updatedAt,
       tags: data.tags ?? [],
       keywords: data.keywords ?? [],
       category: data.category,
@@ -59,6 +63,7 @@ export async function getPostBySlug(slug: string): Promise<Post> {
     title: data.title ?? slug,
     description: data.description ?? '',
     date: data.date ?? '',
+    updatedAt: data.updatedAt,
     tags: data.tags ?? [],
     keywords: data.keywords ?? [],
     category: data.category,

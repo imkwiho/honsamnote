@@ -1,20 +1,55 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Suspense } from 'react';
 import { Geist, Gowun_Batang } from 'next/font/google';
 import Link from 'next/link';
 import SiteVisitTracker from '@/components/SiteVisitTracker';
 import VisitorTracker from '@/components/analytics/VisitorTracker';
 import { getAllPosts, getCategoryCounts } from '@/lib/mdx';
+import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, SITE_LOCALE, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS } from '@/lib/seo';
 import './globals.css';
 
 const geist = Geist({ subsets: ['latin'] });
 const serif = Gowun_Batang({ subsets: ['latin'], weight: ['700'], variable: '--font-serif' });
 
-const SITE_NAME = '1인 가구 생활백서';
+const HOME_TITLE = `${SITE_NAME} | 1인 가구 생활비·주거·생활정보`;
 
 export const metadata: Metadata = {
-  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
-  description: '혼자 사는 사람의 시간, 돈, 공간, 안전을 최적화하는 현실적인 생활 안내서',
+  metadataBase: new URL(SITE_URL),
+  title: { default: HOME_TITLE, template: `%s | ${SITE_NAME}` },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  category: '생활정보',
+  alternates: { canonical: '/' },
+  robots: { index: true, follow: true },
+  manifest: '/manifest.webmanifest',
+  openGraph: {
+    type: 'website',
+    locale: SITE_LOCALE,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [{ url: DEFAULT_OG_IMAGE, ...DEFAULT_OG_IMAGE_DIMENSIONS, alt: SITE_NAME }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: HOME_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION
+      ? { 'naver-site-verification': process.env.NEXT_PUBLIC_NAVER_SITE_VERIFICATION }
+      : undefined,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#7c8f6e',
 };
 
 const navLinks = [

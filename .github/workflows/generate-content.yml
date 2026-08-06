@@ -52,5 +52,16 @@ jobs:
           git config --global user.name 'AI Blog Bot'
           git config --global user.email 'bot@blog.com'
           git add content/blog/ content/topics.json
+          # IndexNow에 새 글 URL만 제출하기 위해, 커밋 전에 새로 추가된 .mdx slug만 뽑아둔다.
+          git diff --staged --name-only --diff-filter=A -- 'content/blog/*.mdx' \
+            | sed -E 's#^content/blog/(.*)\.mdx$#\1#' > /tmp/new_slugs.txt
           git diff --staged --quiet || git commit -m "feat: 1인 가구 블로그 글 자동 발행 - $(date +'%Y-%m-%d %H:%M')"
           git push
+
+      - name: IndexNow에 새 글 URL 제출 (네이버, 즉시 발견용)
+        # INDEXNOW_KEY 시크릿을 아직 설정하지 않았다면 스크립트가 조용히
+        # 건너뛴다 — 이 단계가 있다고 발행이 실패하지 않는다.
+        run: node scripts/submit-indexnow.mjs $(cat /tmp/new_slugs.txt)
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          NEXT_PUBLIC_SITE_URL: https://honsamnote.co.kr

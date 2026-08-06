@@ -62,7 +62,7 @@ function buildPrompt(title: string, content: string, categorySlug: string | unde
   const maxSlots = getMaxSlotsForLength(contentLength);
 
   return `
-당신은 "혼삶 – 1인 가구 생활백서" 블로그의 제휴 상품 추천 분석기입니다.
+당신은 "혼삶노트" (1인 가구 생활정보 블로그)의 제휴 상품 추천 분석기입니다.
 아래 글을 분석해서, 이 글에 쿠팡 상품 캐러셀을 넣을지와 어떤 문맥·위치로 보여줄지 JSON으로만 답하세요.
 
 ## 카테고리
