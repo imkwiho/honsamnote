@@ -1,4 +1,4 @@
-import { assertValidCoupangWidgetConfig } from '@/lib/coupangValidation';
+import { assertValidCoupangWidgetConfig } from '../lib/coupangValidation';
 
 // 쿠팡 파트너스 광고 설정. id/trackingCode는 운영자의 실제 식별값이므로 변경하지 말 것.
 export const coupangAdSettings = {

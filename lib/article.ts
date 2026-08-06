@@ -1,4 +1,4 @@
-import { getMaxSlotsForLength } from '@/config/coupangAds';
+import { getMaxSlotsForLength } from '../config/coupangAds';
 
 export interface TocItem {
   id: string;

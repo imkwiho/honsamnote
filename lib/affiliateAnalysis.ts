@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
-import { getMaxSlotsForLength } from '@/config/coupangAds';
+import { getMaxSlotsForLength } from '../config/coupangAds';
 
 export const MIN_RECOMMENDATION_CONFIDENCE = 0.72;
 
