@@ -15,10 +15,18 @@ describe('sanitizeMdxContent', () => {
     expect(sanitizeMdxContent('가격이 < 1만원')).toBe('가격이 &lt; 1만원');
   });
 
-  it('영문/한글로 시작하는 정상적인 태그처럼 보이는 텍스트는 건드리지 않는다', () => {
+  it('영문으로 시작하는 정상적인 태그는 건드리지 않는다', () => {
     expect(sanitizeMdxContent('<div>내용</div>')).toBe('<div>내용</div>');
     // <br/>은 selfCloseVoidElements가 <br />로 정규화한다(둘 다 유효한 자기 닫힘 형태).
     expect(sanitizeMdxContent('설명 <br/> 다음 줄')).toBe('설명 <br /> 다음 줄');
+  });
+
+  it('"<한글 소제목>"처럼 한글로 시작해도 이스케이프한다(실제 빌드 실패 사례)', () => {
+    // 한글도 유니코드 "글자"라 처음엔 안전하다고 봤지만, 우리가 쓰는 실제
+    // 컴포넌트/태그명은 항상 영문이라 한글 뒤 '>'를 닫는 태그로 오인해
+    // MDX가 "닫는 태그 없음" 오류를 냈다(2026-08-06-cleaning-auto-ff8d39.mdx).
+    const input = '**<비울 옷 판단 기준>**';
+    expect(sanitizeMdxContent(input)).toBe('**&lt;비울 옷 판단 기준>**');
   });
 
   it('닫는 태그(/), 프래그먼트(>), 주석(!), $, _ 로 시작하면 건드리지 않는다', () => {
