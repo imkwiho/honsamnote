@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeMdxContent, selfCloseVoidElements } from '../mdxSanitize';
+import { sanitizeMdxContent, selfCloseVoidElements, stripDuplicateArticle } from '../mdxSanitize';
 
 describe('sanitizeMdxContent', () => {
   it('"<->" 같은 화살표 표기는 이스케이프한다(실제 빌드 실패 사례)', () => {
@@ -76,5 +76,48 @@ describe('sanitizeMdxContent (통합)', () => {
     const input = '자주 <-> 거의, 줄바꿈<br>다음 줄';
     const result = sanitizeMdxContent(input);
     expect(result).toBe('자주 &lt;-> 거의, 줄바꿈<br />다음 줄');
+  });
+});
+
+describe('stripDuplicateArticle', () => {
+  it('Gemini가 글 두 개를 이어붙여 반환한 경우 두 번째 글을 버린다(실제 빌드 실패 사례)', () => {
+    // 2026-08-06-cleaning-auto-467d7f.mdx: 첫 글이 끝난 뒤 "---"와
+    // "title: ..."로 시작하는 두 번째 완전한 글이 그대로 이어 붙어 있었다.
+    const input = [
+      '## 체크리스트',
+      '- [ ] 첫 번째 글의 마지막 항목',
+      '',
+      '이제 정리가 끝났습니다!',
+      '---```',
+      '---',
+      'title: "두 번째 글 제목"',
+      'description: "두 번째 글 설명"',
+      '---',
+      '',
+      '## 문제 상황',
+      '두 번째 글 본문...',
+    ].join('\n');
+
+    const result = stripDuplicateArticle(input);
+    expect(result).not.toContain('title:');
+    expect(result).not.toContain('두 번째 글');
+    expect(result).toContain('이제 정리가 끝났습니다!');
+  });
+
+  it('정상적인 글(중복 없음)은 그대로 반환한다', () => {
+    const input = '## 문제 상황\n평범한 본문입니다.\n\n## 체크리스트\n- [ ] 항목 1';
+    expect(stripDuplicateArticle(input)).toBe(input);
+  });
+
+  it('본문에 "title"이라는 단어가 그냥 등장하는 것만으로는 잘라내지 않는다', () => {
+    const input = '이 글의 title은 검색 노출에 중요합니다. 좋은 title을 짓는 방법을 알아봅시다.';
+    expect(stripDuplicateArticle(input)).toBe(input);
+  });
+
+  it('sanitizeMdxContent에도 통합되어 있다', () => {
+    const input = '정상 본문입니다.\n---\ntitle: "두 번째 글"\n## 문제 상황\n둘째 글 내용';
+    const result = sanitizeMdxContent(input);
+    expect(result).not.toContain('두 번째 글');
+    expect(result).toContain('정상 본문입니다.');
   });
 });

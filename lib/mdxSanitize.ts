@@ -28,7 +28,26 @@ export function selfCloseVoidElements(content: string): string {
   });
 }
 
+// (3) Gemini가 가끔 응답 하나에 완전한 글 두 개를 이어붙여 반환한다(실제
+// 사례: 2026-08-06-cleaning-auto-467d7f.mdx — 첫 글이 정상적으로 끝난 뒤,
+// "---"와 "title: ..."로 시작하는 두 번째 완전한 글(자체 front matter
+// 포함)이 그대로 본문 뒤에 붙어 나옴). matter()는 맨 앞 front matter만
+// 인식하고 나머지는 전부 본문으로 취급하기 때문에, 이 오염된 두 번째
+// 글이 그대로 저장돼 MDX 태그 구조를 깨뜨렸다. 정상적인 본문 줄 맨
+// 앞에는 "title:" 같은 YAML 키가 나올 이유가 없으므로, 그 패턴이 다시
+// 나타나면 그 지점부터는 전부 버린다.
+const DUPLICATE_TITLE_RE = /\ntitle\s*:\s*["']/i;
+
+export function stripDuplicateArticle(content: string): string {
+  const match = DUPLICATE_TITLE_RE.exec(content);
+  if (!match) return content;
+  return content
+    .slice(0, match.index)
+    .replace(/[\s`-]+$/, '')
+    .trimEnd();
+}
+
 /** 생성된 글을 파일로 저장하기 전에 항상 거치는 종합 정리 함수. */
 export function sanitizeMdxContent(content: string): string {
-  return escapeInvalidLessThan(selfCloseVoidElements(content));
+  return escapeInvalidLessThan(selfCloseVoidElements(stripDuplicateArticle(content)));
 }
