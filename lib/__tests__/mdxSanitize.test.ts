@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sanitizeMdxContent, selfCloseVoidElements, stripDuplicateArticle } from '../mdxSanitize';
+import { sanitizeMdxContent, selfCloseVoidElements, stripDuplicateArticle, stripTrailingFormattingNoise } from '../mdxSanitize';
 
 describe('sanitizeMdxContent', () => {
   it('"<->" 같은 화살표 표기는 이스케이프한다(실제 빌드 실패 사례)', () => {
@@ -119,5 +119,45 @@ describe('stripDuplicateArticle', () => {
     const result = sanitizeMdxContent(input);
     expect(result).not.toContain('두 번째 글');
     expect(result).toContain('정상 본문입니다.');
+  });
+});
+
+describe('stripTrailingFormattingNoise', () => {
+  it('문서 맨 끝에 남은 "---"를 제거한다(실제 빌드 실패 사례: 2026-08-09-storage-auto-b05c4f.mdx)', () => {
+    // 체크리스트 마지막 문장 바로 다음 줄(빈 줄 없이)에 "---"가 남아있으면
+    // 마크다운이 앞줄을 Setext 제목으로 오인해 <ChecklistBox> 태그 경계를
+    // 깨뜨렸다.
+    const input = '이 체크리스트를 통해 만족도를 높여줄 거예요!\n---';
+    expect(stripTrailingFormattingNoise(input)).toBe('이 체크리스트를 통해 만족도를 높여줄 거예요!');
+  });
+
+  it('"---" 다음에 코드 펜스("```")까지 남아있어도 둘 다 제거한다', () => {
+    const input = '본문 마지막 문장입니다.\n---\n```';
+    expect(stripTrailingFormattingNoise(input)).toBe('본문 마지막 문장입니다.');
+  });
+
+  it('중간에 있는 정상적인 구분선(thematic break)은 건드리지 않는다', () => {
+    // 실제 내용이 뒤에 더 있으면 "맨 끝"이 아니므로 그대로 둔다.
+    const input = '첫 번째 단락\n\n---\n\n두 번째 단락';
+    expect(stripTrailingFormattingNoise(input)).toBe(input);
+  });
+
+  it('맨 끝에 노이즈가 없으면 원본을 그대로(참조 동일성 유지) 반환한다', () => {
+    // trimEnd()로 개행만 없애고 그대로 돌려주면, 저장할 때마다 "바뀌었다"고
+    // 잘못 판단해 무한히 다시 쓰는 문제가 있었다 — 노이즈가 없으면 반드시
+    // 원본 문자열을 그대로 반환해야 한다.
+    const input = '평범한 본문입니다.\n마지막 줄.\n';
+    expect(stripTrailingFormattingNoise(input)).toBe(input);
+  });
+
+  it('언더스코어/별표 구분선, 언어 표시가 붙은 코드 펜스도 인식한다', () => {
+    expect(stripTrailingFormattingNoise('본문\n___')).toBe('본문');
+    expect(stripTrailingFormattingNoise('본문\n***')).toBe('본문');
+    expect(stripTrailingFormattingNoise('본문\n```json')).toBe('본문');
+  });
+
+  it('sanitizeMdxContent에도 통합되어 있다', () => {
+    const input = '체크리스트 마지막 항목입니다.\n---\n```';
+    expect(sanitizeMdxContent(input)).toBe('체크리스트 마지막 항목입니다.');
   });
 });

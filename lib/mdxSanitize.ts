@@ -47,7 +47,32 @@ export function stripDuplicateArticle(content: string): string {
     .trimEnd();
 }
 
+// (4) Gemini가 프롬프트에 보여준 서식(front matter 구분자 "---", 코드
+// 펜스 "```")을 흉내 내다가 응답 맨 끝에 그 잔재를 그대로 남기는 경우가
+// 있다(실제 사례: 2026-08-09-storage-auto-b05c4f.mdx — 체크리스트 마지막
+// 문장 바로 다음 줄(빈 줄 없이)에 "---"가, 그다음 줄에 "```"가 남아있었음).
+// 마크다운은 텍스트 줄 바로 다음(빈 줄 없이) "---"가 오면 그 앞줄을
+// Setext 제목으로 해석하는데, 이게 <ChecklistBox> 같은 컴포넌트 태그로
+// 감싸는 블록 안에서 일어나면 MDX가 태그 경계를 잘못 계산해 "닫는 태그
+// 없음" 오류를 낸다. 문서 맨 끝에만 이런 줄이 남아있으면(실제 내용이
+// 전혀 아니므로) 전부 제거한다.
+const TRAILING_NOISE_LINE_RE = /^[ \t]*(?:-{3,}|_{3,}|\*{3,}|`{3,}[a-zA-Z]*)[ \t]*$/;
+
+export function stripTrailingFormattingNoise(content: string): string {
+  const trimmed = content.trimEnd();
+  const lines = trimmed.split('\n');
+  const originalLength = lines.length;
+  while (lines.length > 0 && TRAILING_NOISE_LINE_RE.test(lines[lines.length - 1])) {
+    lines.pop();
+  }
+  // 실제로 제거할 노이즈 줄이 없었다면 원본을 그대로 반환한다. trimEnd()로
+  // 끝 개행만 없애고 그대로 돌려주면, 파일을 저장할 때마다(개행 유무 차이로)
+  // "내용이 바뀌었다"고 잘못 판단되어 매번 다시 쓰는 무한 반복이 생긴다.
+  if (lines.length === originalLength) return content;
+  return lines.join('\n').trimEnd();
+}
+
 /** 생성된 글을 파일로 저장하기 전에 항상 거치는 종합 정리 함수. */
 export function sanitizeMdxContent(content: string): string {
-  return escapeInvalidLessThan(selfCloseVoidElements(stripDuplicateArticle(content)));
+  return escapeInvalidLessThan(selfCloseVoidElements(stripTrailingFormattingNoise(stripDuplicateArticle(content))));
 }
