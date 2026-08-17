@@ -1,5 +1,5 @@
 import JsonLd from './JsonLd';
-import { SITE_NAME, SITE_URL, DEFAULT_OG_IMAGE, absoluteUrl, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { SITE_NAME, SITE_URL, DEFAULT_OG_IMAGE, absoluteUrl, buildBreadcrumbJsonLd, breadcrumbNodesToJsonLd, type BreadcrumbNode } from '@/lib/seo';
 
 interface Props {
   title: string;
@@ -7,14 +7,16 @@ interface Props {
   slug: string;
   date: string;
   updatedAt?: string;
-  category?: string;
   categoryName?: string;
   tags: string[];
+  // 화면에 보이는 <Breadcrumb />와 반드시 같은 배열을 넘긴다(lib/seo.ts 주석 참고) —
+  // 이 컴포넌트가 스스로 breadcrumb을 만들지 않는 이유.
+  breadcrumbNodes: BreadcrumbNode[];
 }
 
 // 실제 이름이 있는 필자가 없는 AI 보조 작성 블로그라, 가상의 전문가 인물을
 // 만들어내는 대신 발행 주체(Organization)를 author/publisher로 명시한다.
-export default function ArticleJsonLd({ title, description, slug, date, updatedAt, category, categoryName, tags }: Props) {
+export default function ArticleJsonLd({ title, description, slug, date, updatedAt, categoryName, tags, breadcrumbNodes }: Props) {
   const url = absoluteUrl(`/blog/${slug}/`);
   const publishedTime = date ? new Date(date).toISOString() : undefined;
   const modifiedTime = updatedAt ? new Date(updatedAt).toISOString() : publishedTime;
@@ -39,11 +41,7 @@ export default function ArticleJsonLd({ title, description, slug, date, updatedA
     keywords: tags.length > 0 ? tags.join(', ') : undefined,
   };
 
-  const breadcrumb = buildBreadcrumbJsonLd([
-    { name: SITE_NAME, url: SITE_URL },
-    ...(category && categoryName ? [{ name: categoryName, url: absoluteUrl(`/category/${category}/`) }] : []),
-    { name: title, url },
-  ]);
+  const breadcrumb = buildBreadcrumbJsonLd(breadcrumbNodesToJsonLd(breadcrumbNodes, url));
 
   return (
     <>

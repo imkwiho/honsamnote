@@ -10,6 +10,9 @@ import {
   computeFactCheckFlag,
   computeSeoPriority,
   detectSearchIntent,
+  primaryKeyword,
+  secondaryKeywords,
+  suggestTitle,
 } from '../seoAudit';
 
 function makePost(overrides: Partial<AuditPost>): AuditPost {
@@ -173,12 +176,16 @@ describe('findDuplicateCandidates', () => {
 });
 
 describe('computeRelevanceScore', () => {
+  // 2단계 내부링크 시스템에서 실제로 쓰는 가중치: sameCluster/primaryKeyword
+  // 일치가 가장 높고, category 일치는 절대 핵심 기준이 되면 안 되므로 항상
+  // 최하위(1점)다.
   const clusterOf = (p: AuditPost) => classifyCluster(p).clusterSlug;
 
-  it('같은 클러스터면 5점을 더한다', () => {
-    const a = makePost({ slug: 'a', keywords: ['욕실 곰팡이'] });
-    const b = makePost({ slug: 'b', keywords: ['욕실 곰팡이'] });
-    expect(computeRelevanceScore(a, b, clusterOf)).toBeGreaterThanOrEqual(5);
+  it('같은 클러스터면(클러스터 가중치 6) 다른 클러스터보다 항상 높다', () => {
+    const a = makePost({ slug: 'a', category: 'cleaning', keywords: ['욕실 곰팡이'], tags: [] });
+    const b = makePost({ slug: 'b', category: 'cleaning', keywords: ['욕실 곰팡이'], tags: [] });
+    const c = makePost({ slug: 'c', category: 'cleaning', keywords: ['세탁기 냄새'], tags: [] });
+    expect(computeRelevanceScore(a, b, clusterOf)).toBeGreaterThan(computeRelevanceScore(a, c, clusterOf));
   });
 
   it('키워드/태그/카테고리가 전혀 겹치지 않고 클러스터도 다르면 0점이다', () => {
@@ -187,11 +194,33 @@ describe('computeRelevanceScore', () => {
     expect(computeRelevanceScore(a, b, clusterOf)).toBe(0);
   });
 
-  it('키워드 중복 1개당 3점씩 더한다', () => {
+  it('대표 키워드(primaryKeyword)가 완전히 같으면 keyword overlap과 별도로 높은 가중치(5)를 더한다', () => {
     const a = makePost({ slug: 'a', category: 'food', categoryName: '혼밥·식재료 관리', keywords: ['식재료 보관', '냉장 보관'], tags: [] });
     const b = makePost({ slug: 'b', category: 'lifestyle', categoryName: '관계·고립·생활 리듬', keywords: ['식재료 보관'], tags: [] });
-    // 카테고리 다름(0) + 클러스터 다름(0) + 키워드 겹침 1개(3) + 태그 겹침 0
-    expect(computeRelevanceScore(a, b, clusterOf)).toBe(3);
+    // 카테고리 다름(0) + 클러스터 다름(0) + primaryKeyword 일치(5) + keyword 겹침 1개(2) + 태그 겹침(0)
+    expect(computeRelevanceScore(a, b, clusterOf)).toBe(7);
+  });
+
+  it('category 단독 일치는 항상 최하위 가중치(1)만 준다 — 핵심 판단 기준이 되면 안 됨', () => {
+    const a = makePost({ slug: 'a', category: 'cleaning', keywords: ['전혀 다른 키워드1'], tags: [] });
+    const b = makePost({ slug: 'b', category: 'cleaning', keywords: ['전혀 다른 키워드2'], tags: [] });
+    expect(computeRelevanceScore(a, b, clusterOf)).toBe(1);
+  });
+
+  it('"1인 가구"처럼 범용적인 keyword가 겹치는 것만으로는 점수를 주지 않는다', () => {
+    const a = makePost({ slug: 'a', category: 'cleaning', keywords: ['1인 가구', '욕실 곰팡이'], tags: [] });
+    const b = makePost({ slug: 'b', category: 'cleaning', keywords: ['1인 가구', '세탁기 냄새'], tags: [] });
+    // 클러스터 다름(bathroom-cleaning vs laundry-clothing, 0) + category 일치(1) + "1인 가구"는 GENERIC_PHRASES라 0
+    expect(computeRelevanceScore(a, b, clusterOf)).toBe(1);
+  });
+
+  it('카테고리 내에서 흔한 keyword(commonTerms)로 전달된 것도 겹침 점수에서 제외한다', () => {
+    const a = makePost({ slug: 'a', category: 'cost', keywords: ['생활비 절약', '전기세 절약'], tags: [] });
+    const b = makePost({ slug: 'b', category: 'cost', keywords: ['생활비 절약', '가스비 절약'], tags: [] });
+    const commonTerms = new Set(['생활비 절약']);
+    const withoutFilter = computeRelevanceScore(a, b, clusterOf);
+    const withFilter = computeRelevanceScore(a, b, clusterOf, commonTerms);
+    expect(withFilter).toBeLessThan(withoutFilter);
   });
 });
 
@@ -246,5 +275,68 @@ describe('computeSeoPriority', () => {
     });
     expect(score).toBeGreaterThanOrEqual(0);
     expect(score).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('primaryKeyword / secondaryKeywords', () => {
+  it('범용 표현("혼자 사는 직장인" 등)이 keywords 맨 앞에 있어도 건너뛰고 구체적인 키워드를 고른다', () => {
+    // 실제 버그 사례: "주말 무기력증 탈출" 글의 keywords[0]가 "혼자 사는
+    // 직장인"이라, 필터링 없이 그대로 쓰면 제목 생성 결과가 "혼자 사는
+    // 직장인 해결 방법"처럼 원래 없애려던 상투어를 되살렸다.
+    const post = makePost({ keywords: ['혼자 사는 직장인', '주말 무기력증', '생활 루틴'] });
+    expect(primaryKeyword(post)).toBe('주말 무기력증');
+  });
+
+  it('keywords가 전부 범용 표현뿐이면 그래도 첫 번째를 반환한다(없는 것보다는 나음)', () => {
+    const post = makePost({ keywords: ['1인 가구', '혼자 사는'] });
+    expect(primaryKeyword(post)).toBe('1인 가구');
+  });
+
+  it('keywords가 비어 있으면 tags에서 범용 표현을 건너뛰고 고른다', () => {
+    const post = makePost({ keywords: [], tags: ['1인 가구', '전자레인지 청소'] });
+    expect(primaryKeyword(post)).toBe('전자레인지 청소');
+  });
+
+  it('secondaryKeywords는 primaryKeyword로 선택된 항목을 제외한 나머지를 반환한다', () => {
+    const post = makePost({ keywords: ['혼자 사는 직장인', '주말 무기력증', '생활 루틴'] });
+    expect(secondaryKeywords(post)).toEqual(['혼자 사는 직장인', '생활 루틴']);
+  });
+});
+
+describe('suggestTitle', () => {
+  it('상투적 도입부를 제거하고 대표 키워드를 앞으로 당긴다', () => {
+    const post = makePost({ title: '혼자 사는 당신, 전자레인지 냄새 때문에 고민이라면?', keywords: ['전자레인지 냄새'] });
+    expect(suggestTitle(post)).toMatch(/^전자레인지 냄새/);
+  });
+
+  it('범용 표현이 대표 키워드로 선택되지 않아, 상투어가 제목에 다시 나타나지 않는다', () => {
+    const post = makePost({
+      title: '혼자 사는 직장인, 주말 무기력증 탈출! 나만의 루틴 만드는 법',
+      keywords: ['혼자 사는 직장인', '주말 무기력증'],
+    });
+    expect(suggestTitle(post)).not.toContain('혼자 사는 직장인');
+    expect(suggestTitle(post)).toContain('주말 무기력증');
+  });
+
+  it('｜ 뒤에는 카테고리명 대신 구체적인 보조 키워드를 쓴다(범용 표현이면 생략)', () => {
+    const post = makePost({
+      title: '식기세척기 관련 글',
+      keywords: ['미니 식기세척기', '설거지 시간 절약'],
+      categoryName: '1인 가구 제품·서비스',
+    });
+    const result = suggestTitle(post);
+    expect(result).not.toContain('1인 가구 제품·서비스');
+    expect(result).toContain('설거지 시간 절약');
+  });
+
+  it('보조 키워드가 범용 표현을 부분적으로라도 포함하면(예: "1인 가구 주방") 생략한다', () => {
+    const post = makePost({ title: '식기세척기 글', keywords: ['미니 식기세척기', '1인 가구 주방'] });
+    const result = suggestTitle(post);
+    expect(result).not.toContain('｜');
+  });
+
+  it('보조 키워드가 없으면 ｜ 구분자를 억지로 채우지 않는다', () => {
+    const post = makePost({ title: '전자레인지 냄새 글', keywords: ['전자레인지 냄새'] });
+    expect(suggestTitle(post)).not.toContain('｜');
   });
 });

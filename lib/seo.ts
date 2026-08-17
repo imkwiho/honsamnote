@@ -32,3 +32,18 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
     })),
   };
 }
+
+// 2단계: 화면에 보이는 Breadcrumb UI(components/seo/Breadcrumb.tsx)와
+// JSON-LD(buildBreadcrumbJsonLd)가 서로 다른 항목을 만들어 어긋나는 일을
+// 막기 위해, 페이지마다 이 상대경로 노드 배열을 **한 번만** 만들어 두
+// 곳(화면 컴포넌트 + *JsonLd 컴포넌트)에 그대로 넘긴다. 마지막 노드(현재
+// 페이지)는 href를 생략한다.
+export interface BreadcrumbNode {
+  name: string;
+  href?: string;
+}
+
+/** BreadcrumbNode[] → JSON-LD용 절대 URL 배열로 변환. href가 없는 마지막 노드는 currentUrl(절대경로)을 쓴다. */
+export function breadcrumbNodesToJsonLd(nodes: BreadcrumbNode[], currentUrl: string): BreadcrumbItem[] {
+  return nodes.map(node => ({ name: node.name, url: node.href ? absoluteUrl(node.href) : currentUrl }));
+}

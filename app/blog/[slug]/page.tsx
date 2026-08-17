@@ -12,7 +12,10 @@ import SummaryBox from '@/components/article/SummaryBox';
 import ChecklistBox from '@/components/article/ChecklistBox';
 import WarningBox from '@/components/article/WarningBox';
 import ArticleJsonLd from '@/components/seo/ArticleJsonLd';
-import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS } from '@/lib/seo';
+import Breadcrumb from '@/components/seo/Breadcrumb';
+import { SITE_NAME, SITE_LOCALE, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS, type BreadcrumbNode } from '@/lib/seo';
+import { computeSeoMetadata } from '@/lib/seoMetadata';
+import { getPillarForCluster } from '@/lib/pillars';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -97,6 +100,18 @@ export default async function BlogPostPage({ params }: Props) {
     },
   });
 
+  // 홈 → 대분류 → 검색 클러스터(Pillar 페이지가 있으면 링크) → 현재 글.
+  // 화면에 보이는 <Breadcrumb />와 JSON-LD(ArticleJsonLd)가 반드시 같은
+  // 배열을 쓰도록 여기서 한 번만 만든다(lib/seo.ts 주석 참고).
+  const seoMeta = computeSeoMetadata({ ...post, keywords: post.keywords ?? [], tags: post.tags ?? [] });
+  const pillar = getPillarForCluster(seoMeta.clusterId);
+  const breadcrumbNodes: BreadcrumbNode[] = [
+    { name: SITE_NAME, href: '/' },
+    ...(post.category && post.categoryName ? [{ name: post.categoryName, href: `/category/${post.category}/` }] : []),
+    { name: seoMeta.clusterName, href: pillar ? `/guide/${pillar.slug}/` : undefined },
+    { name: post.title },
+  ];
+
   return (
     <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-10 sm:py-14">
       <AnalyticsMeta contentType="post" category={post.category} postSlug={post.slug} postId={post.slug} title={post.title} />
@@ -106,11 +121,12 @@ export default async function BlogPostPage({ params }: Props) {
         slug={post.slug}
         date={post.date}
         updatedAt={post.updatedAt}
-        category={post.category}
         categoryName={post.categoryName}
         tags={post.tags}
+        breadcrumbNodes={breadcrumbNodes}
       />
       <article>
+        <Breadcrumb items={breadcrumbNodes} />
         <ArticleHeader
           title={post.title}
           description={post.description}
@@ -138,7 +154,14 @@ export default async function BlogPostPage({ params }: Props) {
         )}
       </article>
 
-      <ArticleFooter category={post.category} categoryName={post.categoryName} currentSlug={post.slug} />
+      <ArticleFooter
+        slug={post.slug}
+        title={post.title}
+        category={post.category}
+        categoryName={post.categoryName}
+        tags={post.tags}
+        keywords={post.keywords}
+      />
     </div>
   );
 }

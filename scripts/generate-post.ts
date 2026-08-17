@@ -7,6 +7,7 @@ import { getPostsByCategory } from '../lib/mdx';
 import { analyzePostForAffiliates } from '../lib/affiliateAnalysis';
 import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type TopicType } from '../lib/topics';
 import { sanitizeMdxContent } from '../lib/mdxSanitize';
+import { readGenerationStatus } from '../lib/generationStatus';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
 // 정해진 소재가 바닥났을 때, AI가 스스로 새 소재를 고를 글의 유형을 순환시켜 다양성을 준다.
@@ -110,6 +111,15 @@ async function buildTasksForCategory(
 }
 
 async function main() {
+  const status = readGenerationStatus();
+  if (status.paused) {
+    console.log('⏸️  자동 발행이 일시정지 상태입니다 — 아무 글도 생성하지 않습니다.');
+    if (status.reason) console.log(`   사유: ${status.reason}`);
+    if (status.resumeNote) console.log(`   재개 방법: ${status.resumeNote}`);
+    console.log('   (content/generation-status.json의 "paused"를 false로 바꾸거나 파일을 지우면 재개됩니다.)');
+    return;
+  }
+
   const [, , perCategoryArg, categoryArg] = process.argv;
 
   const perCategoryRaw = parseInt(perCategoryArg ?? '', 10);

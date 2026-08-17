@@ -14,6 +14,7 @@ import {
   needsMetaFix,
   findDuplicateDescriptionSlugs,
   findDuplicateCandidates,
+  computeCommonTermsByCategory,
   topRelatedSlugs,
   suggestTitle,
   suggestDescription,
@@ -75,6 +76,7 @@ function main() {
     const slug = clusterInfo.get(p.slug)!.clusterSlug;
     clusterCounts.set(slug, (clusterCounts.get(slug) ?? 0) + 1);
   }
+  const commonTermsByCategory = computeCommonTermsByCategory(posts);
 
   const dupDescriptionSlugs = findDuplicateDescriptionSlugs(posts);
   const mergeCandidates = findDuplicateCandidates(posts);
@@ -98,7 +100,7 @@ function main() {
     const metaFix = needsMetaFix(post, dupDescriptionSlugs);
     const dupFlag = duplicateFlagBySlug.get(post.slug);
     const factcheck = computeFactCheckFlag(post);
-    const related = topRelatedSlugs(post, posts, clusterOf, 6);
+    const related = topRelatedSlugs(post, posts, clusterOf, 6, commonTermsByCategory.get(post.category ?? '(없음)') ?? new Set());
     const seoPriority = computeSeoPriority({
       titleNeedsFix: titleFix,
       hasPrimaryKeyword: primaryKeyword(post).length > 0,

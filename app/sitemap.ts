@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/mdx';
 import { loadTopics } from '@/lib/topics';
 import { SITE_URL } from '@/lib/seo';
+import { PILLARS } from '@/lib/pillars';
 
 export const dynamic = 'force-static';
 
@@ -35,5 +36,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticEntries, ...categoryEntries, ...postEntries];
+  // Pillar/Hub 페이지 — 카테고리보다는 아래, 개별 글보다는 위 우선순위.
+  const guideEntries: MetadataRoute.Sitemap = PILLARS.map(pillar => ({
+    url: `${SITE_URL}/guide/${pillar.slug}/`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.75,
+  }));
+
+  return [...staticEntries, ...categoryEntries, ...guideEntries, ...postEntries];
 }

@@ -102,7 +102,13 @@ export const CLUSTER_TAXONOMY: Record<string, ClusterDef[]> = {
 
 const GENERAL_CLUSTER_SUFFIX = '-general';
 
-export function classifyCluster(post: AuditPost): { clusterSlug: string; clusterName: string } {
+export interface ClusterClassification {
+  clusterSlug: string;
+  clusterName: string;
+  matchScore: number; // 몇 개의 서로 다른 matchTerm이 실제로 걸렸는지 — Pillar 적합도(topic coherence) 판단에 사용
+}
+
+export function classifyClusterDetailed(post: AuditPost): ClusterClassification {
   const category = post.category ?? '';
   const defs = CLUSTER_TAXONOMY[category] ?? [];
   const haystack = [post.title, ...post.keywords, ...post.tags].join(' ');
@@ -117,11 +123,17 @@ export function classifyCluster(post: AuditPost): { clusterSlug: string; cluster
     }
   }
 
-  if (best) return { clusterSlug: best.slug, clusterName: best.name };
+  if (best) return { clusterSlug: best.slug, clusterName: best.name, matchScore: bestScore };
   return {
     clusterSlug: `${category || 'uncategorized'}${GENERAL_CLUSTER_SUFFIX}`,
     clusterName: `${post.categoryName ?? '미분류'} 기타`,
+    matchScore: 0,
   };
+}
+
+export function classifyCluster(post: AuditPost): { clusterSlug: string; clusterName: string } {
+  const { clusterSlug, clusterName } = classifyClusterDetailed(post);
+  return { clusterSlug, clusterName };
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -151,16 +163,28 @@ export function detectSearchIntent(post: AuditPost): SearchIntent {
 // 3. 대표/보조 검색어
 // ────────────────────────────────────────────────────────────────────────
 
+// 사이트 전체에 보일러플레이트처럼 반복되는 표현("1인 가구", "혼자 사는" 등)은
+// AI가 keywords 필드 맨 앞에 붙여놓는 경우가 있다(실제 사례: "주말 무기력증
+// 탈출" 글의 keywords[0]가 "혼자 사는 직장인"이었음 — 이걸 그대로 대표
+// 키워드로 쓰면 제목 생성 결과가 "혼자 사는 직장인 해결 방법"처럼 원래
+// 없애려던 상투어를 그대로 되살리는 정반대 결과가 난다). 대표 키워드를
+// 고를 때는 이런 범용 표현을 건너뛴다.
+export const GENERIC_PHRASES = new Set([
+  '1인 가구', '혼자 사는', '자취', '직장인', '1인 가구 직장인', '혼자 사는 당신', '1인가구',
+  '혼자 사는 직장인', // 실제 코퍼스에서 keywords[0]로 15회 등장 — 인물 묘사일 뿐 검색어가 아님
+]);
+
 export function primaryKeyword(post: AuditPost): string {
-  if (post.keywords.length > 0) return post.keywords[0];
-  if (post.tags.length > 0) return post.tags[0];
-  return '';
+  const specific = post.keywords.find(k => !GENERIC_PHRASES.has(k)) ?? post.tags.find(t => !GENERIC_PHRASES.has(t));
+  if (specific) return specific;
+  // 전부 범용 표현뿐이라면(드묾) 그래도 뭔가는 반환한다 — 없는 것보다는 낫다.
+  return post.keywords[0] ?? post.tags[0] ?? '';
 }
 
 export function secondaryKeywords(post: AuditPost): string[] {
-  if (post.keywords.length > 1) return post.keywords.slice(1);
-  if (post.keywords.length === 0) return post.tags.slice(1);
-  return [];
+  const pk = primaryKeyword(post);
+  const pool = post.keywords.length > 0 ? post.keywords : post.tags;
+  return pool.filter(k => k !== pk);
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -207,14 +231,13 @@ export function findDuplicateDescriptionSlugs(posts: AuditPost[]): Set<string> {
 // 5. 카니벌라이제이션(중복 검색의도) 탐지 — 같은 카테고리 내에서만 비교
 // ────────────────────────────────────────────────────────────────────────
 
-// 사이트 전체에 보일러플레이트처럼 반복되는 표현("1인 가구", "혼자 사는" 등)은
-// 손으로 하나씩 블랙리스트에 추가해도 끝이 없다(실측: "생활비 절약"/"생활비
-// 최적화"처럼 카테고리 이름과 거의 같은 keyword가 그 카테고리 글 절반 가까이에
-// 붙어 있어, 블랙리스트 몇 개로는 못 막고 3,900쌍 이상의 가짜 후보가 나왔다).
+// GENERIC_PHRASES(위 3번 섹션에서 정의)만으로는 부족하다 — 손으로 하나씩
+// 블랙리스트에 추가해도 끝이 없다(실측: "생활비 절약"/"생활비 최적화"처럼
+// 카테고리 이름과 거의 같은 keyword가 그 카테고리 글 절반 가까이에 붙어
+// 있어, 블랙리스트 몇 개로는 못 막고 3,900쌍 이상의 가짜 후보가 나왔다).
 // 대신 코퍼스 기반으로: **같은 카테고리 안에서** 특정 keyword/tag가 등장하는
 // 글의 비율이 임계값을 넘으면("그 카테고리에서는 흔한 말") 자동으로 노이즈로
 // 취급한다 — 카테고리마다 다시 튜닝할 필요가 없다.
-const GENERIC_PHRASES = new Set(['1인 가구', '혼자 사는', '자취', '직장인', '1인 가구 직장인', '혼자 사는 당신', '1인가구']);
 const CATEGORY_COMMON_RATIO = 0.08; // 카테고리 내 글의 8% 이상에서 등장하면 노이즈로 취급
 
 /** category 그룹 안에서 각 keyword/tag가 몇 개 글에 등장하는지 센다. */
@@ -225,6 +248,29 @@ function buildDocFrequency(group: AuditPost[]): Map<string, number> {
     for (const term of seen) freq.set(term, (freq.get(term) ?? 0) + 1);
   }
   return freq;
+}
+
+/**
+ * 카테고리별로 "그 카테고리에서는 흔해서 신호가 안 되는" keyword/tag 집합을
+ * 한 번에 계산한다. findDuplicateCandidates(중복 탐지)와 computeRelevanceScore
+ * (관련 글 추천)가 똑같은 기준을 공유한다 — 한쪽만 고쳐서 기준이 어긋나는
+ * 일을 방지한다.
+ */
+export function computeCommonTermsByCategory(posts: AuditPost[]): Map<string, Set<string>> {
+  const byCategory = new Map<string, AuditPost[]>();
+  for (const post of posts) {
+    const cat = post.category ?? '(없음)';
+    const list = byCategory.get(cat) ?? [];
+    list.push(post);
+    byCategory.set(cat, list);
+  }
+  const result = new Map<string, Set<string>>();
+  for (const [cat, group] of byCategory) {
+    const docFreq = buildDocFrequency(group);
+    const commonThreshold = Math.max(4, Math.ceil(group.length * CATEGORY_COMMON_RATIO));
+    result.set(cat, new Set([...docFreq.entries()].filter(([, count]) => count >= commonThreshold).map(([term]) => term)));
+  }
+  return result;
 }
 
 function postTokenSet(post: AuditPost, commonTerms: Set<string>): Set<string> {
@@ -275,11 +321,11 @@ export function findDuplicateCandidates(posts: AuditPost[]): MergeCandidate[] {
     byCategory.set(cat, list);
   }
 
+  const commonTermsByCategory = computeCommonTermsByCategory(posts);
+
   const candidates: MergeCandidate[] = [];
-  for (const group of byCategory.values()) {
-    const docFreq = buildDocFrequency(group);
-    const commonThreshold = Math.max(4, Math.ceil(group.length * CATEGORY_COMMON_RATIO));
-    const commonTerms = new Set([...docFreq.entries()].filter(([, count]) => count >= commonThreshold).map(([term]) => term));
+  for (const [cat, group] of byCategory) {
+    const commonTerms = commonTermsByCategory.get(cat) ?? new Set<string>();
     const tokenSets = group.map(p => postTokenSet(p, commonTerms));
     const clusters = group.map(p => classifyCluster(p).clusterSlug);
     for (let i = 0; i < group.length; i++) {
@@ -320,30 +366,47 @@ export function findDuplicateCandidates(posts: AuditPost[]): MergeCandidate[] {
 }
 
 // ────────────────────────────────────────────────────────────────────────
-// 6. 관련 글 점수 (지시서 13번 공식) — 이번 단계는 리포트용 미리보기만.
+// 6. 관련 글 점수 — 2단계 내부링크 시스템(lib/relatedPosts.ts)이 실제로
+// 사용하는 핵심 함수. 가중치 철학(지시서 6번): sameCluster/primaryKeyword
+// 일치는 높은 가중치, keyword/tag overlap은 중간, **category 일치는 절대
+// 핵심 판단 기준이 되면 안 되므로 항상 최하위 가중치**. "1인 가구" 같은
+// 범용 keyword가 겹친다고 관련 글로 치지 않도록, 카테고리 내 흔한 keyword는
+// commonTerms로 걸러낸다(computeCommonTermsByCategory, 중복 탐지와 동일 기준).
 // ────────────────────────────────────────────────────────────────────────
 
 export function computeRelevanceScore(
   a: AuditPost,
   b: AuditPost,
-  clusterOf: (post: AuditPost) => string
+  clusterOf: (post: AuditPost) => string,
+  commonTerms: Set<string> = new Set()
 ): number {
-  const clusterMatch = clusterOf(a) === clusterOf(b) ? 1 : 0;
-  const keywordOverlap = a.keywords.filter(k => b.keywords.includes(k)).length;
-  const tagOverlap = a.tags.filter(t => b.tags.includes(t)).length;
+  const isNoise = (term: string) => GENERIC_PHRASES.has(term) || commonTerms.has(term);
+
+  // "-general"(미분류 폴백) 클러스터는 둘 다 아무 세부 주제에도 안 걸렸을
+  // 뿐이라 실제로 관련 있다는 신호가 아니다(findDuplicateCandidates와 동일 원칙).
+  const aCluster = clusterOf(a);
+  const bCluster = clusterOf(b);
+  const clusterMatch = aCluster === bCluster && !aCluster.endsWith('-general') ? 1 : 0;
+  const aPrimary = primaryKeyword(a);
+  const bPrimary = primaryKeyword(b);
+  const primaryKeywordMatch = aPrimary && aPrimary === bPrimary && !isNoise(aPrimary) ? 1 : 0;
+  const keywordOverlap = a.keywords.filter(k => !isNoise(k) && b.keywords.includes(k)).length;
+  const tagOverlap = a.tags.filter(t => !isNoise(t) && b.tags.includes(t)).length;
   const categoryMatch = a.category && a.category === b.category ? 1 : 0;
-  return clusterMatch * 5 + keywordOverlap * 3 + tagOverlap * 2 + categoryMatch * 1;
+
+  return clusterMatch * 6 + primaryKeywordMatch * 5 + keywordOverlap * 2 + tagOverlap * 2 + categoryMatch * 1;
 }
 
 export function topRelatedSlugs(
   post: AuditPost,
   allPosts: AuditPost[],
   clusterOf: (post: AuditPost) => string,
-  n = 5
+  n = 5,
+  commonTerms: Set<string> = new Set()
 ): string[] {
   return allPosts
     .filter(p => p.slug !== post.slug)
-    .map(p => ({ slug: p.slug, score: computeRelevanceScore(post, p, clusterOf) }))
+    .map(p => ({ slug: p.slug, score: computeRelevanceScore(post, p, clusterOf, commonTerms) }))
     .filter(p => p.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, n)
@@ -376,11 +439,17 @@ export function suggestTitle(post: AuditPost): string {
   const intent = detectSearchIntent(post);
   const suffix = INTENT_TEMPLATE_SUFFIX[intent];
   if (!kw) return stripped; // 대표 키워드가 없으면 상투 도입부만 제거한 원제목을 그대로 제안.
-  if (stripped.includes(kw)) {
-    // 이미 키워드가 포함되어 있으면 그 키워드를 맨 앞으로 당겨온다.
-    return `${kw} ${suffix}｜${post.categoryName ?? ''}`.replace(/\s+/g, ' ').trim();
-  }
-  return `${kw} ${suffix}`;
+
+  // "｜" 뒤에는 카테고리명 같은 두루뭉술한 값이 아니라, 그 글만의 구체적인
+  // 보조 설명이 와야 한다(사용자 예시: "전자레인지 냄새 제거｜찌든 때까지
+  // 10분 청소법"). 범용 표현이 아닌 두 번째 keyword가 있으면 그걸 쓰고,
+  // 없으면 억지로 채우지 않는다. 정확히 일치하는 것뿐 아니라 "혼자 사는
+  // 직장인 식기세척기"처럼 범용 표현을 포함만 하는 경우도 걸러낸다(실제
+  // 사례로 발견됨 — 부분 일치라 Set.has()로는 못 잡음).
+  const containsGenericPhrase = (text: string) => [...GENERIC_PHRASES].some(phrase => text.includes(phrase));
+  const secondary = secondaryKeywords(post).find(k => k !== kw && !containsGenericPhrase(k));
+  const base = `${kw} ${suffix}`;
+  return secondary ? `${base}｜${secondary}` : base;
 }
 
 const CONCLUSION_HEADING_RE = /^##\s*(먼저 확인할 결론|결론|지금 할 일|핵심 결론)\s*$/m;

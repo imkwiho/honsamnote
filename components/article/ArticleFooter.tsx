@@ -1,38 +1,79 @@
 import Link from 'next/link';
-import { getPostsByCategory } from '@/lib/mdx';
+import { getAllPosts } from '@/lib/mdx';
+import { computeCommonTermsByCategory } from '@/lib/seoAudit';
+import { getRelatedContent, type RelatedLink } from '@/lib/relatedPosts';
 import SubscribeForm from '@/components/SubscribeForm';
 
 interface ArticleFooterProps {
+  slug: string;
+  title: string;
   category?: string;
   categoryName?: string;
-  currentSlug: string;
+  tags: string[];
+  keywords?: string[];
 }
 
-export default async function ArticleFooter({ category, categoryName, currentSlug }: ArticleFooterProps) {
-  const relatedPosts = category ? (await getPostsByCategory(category)).filter(p => p.slug !== currentSlug).slice(0, 3) : [];
+function RelatedCard({ post }: { post: RelatedLink }) {
+  return (
+    <Link
+      href={`/blog/${post.slug}`}
+      className="block bg-[#fffdf9] border border-[#ece4d6] rounded-xl p-4 hover:border-[#7c8f6e] transition-colors"
+    >
+      {post.categoryName && (
+        <p className="text-[10px] font-semibold text-[#8a8377] uppercase tracking-wide mb-1">{post.categoryName}</p>
+      )}
+      <h3 className="text-[13.5px] font-bold text-[#2f2c26] leading-snug line-clamp-2">{post.title}</h3>
+    </Link>
+  );
+}
+
+export default async function ArticleFooter({ slug, title, category, categoryName, tags, keywords }: ArticleFooterProps) {
+  const allPosts = await getAllPosts();
+  const currentPost = { slug, title, description: '', date: '', tags, keywords: keywords ?? [], category, categoryName, content: '' };
+  const commonTermsByCategory = computeCommonTermsByCategory(allPosts.map(p => ({ ...p, keywords: p.keywords ?? [], content: '' })));
+  const commonTerms = commonTermsByCategory.get(category ?? '') ?? new Set<string>();
+  const related = getRelatedContent(
+    currentPost,
+    allPosts.map(p => ({ ...p, keywords: p.keywords ?? [], content: '' })),
+    commonTerms
+  );
+
+  const hasRelatedContent = related.sideways.length > 0 || related.next.length > 0;
 
   return (
     <div className="not-prose">
-      {relatedPosts.length > 0 && category && (
-        <section className="mt-14 pt-10 border-t border-[#ece4d6]">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[15px] font-bold text-[#2f2c26]">{categoryName} 관련 글</h2>
-            <Link href={`/category/${category}`} className="text-[13px] font-semibold text-[#4f5f45] hover:underline whitespace-nowrap">
-              전체 보기 →
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {relatedPosts.map(post => (
-              <Link
-                key={post.slug}
-                href={`/blog/${post.slug}`}
-                className="block bg-[#fffdf9] border border-[#ece4d6] rounded-2xl p-5 hover:border-[#7c8f6e] transition-colors"
-              >
-                <h3 className="text-[14px] font-bold text-[#2f2c26] leading-snug line-clamp-2 mb-2">{post.title}</h3>
-                <p className="text-[12px] text-[#8a8377] line-clamp-2">{post.description}</p>
-              </Link>
-            ))}
-          </div>
+      {related.up && (
+        <Link
+          href={related.up.href}
+          className="mt-14 flex items-center justify-between gap-3 bg-[#f6f2e9] border border-[#ece4d6] rounded-2xl px-5 py-4 hover:border-[#7c8f6e] transition-colors"
+        >
+          <span className="text-[13.5px] font-bold text-[#2f2c26]">📚 {related.up.name} 전체 가이드 보기</span>
+          <span className="text-[13px] text-[#7c8f6e] whitespace-nowrap">전체 보기 →</span>
+        </Link>
+      )}
+
+      {hasRelatedContent && (
+        <section className={related.up ? 'mt-8 pt-8 border-t border-[#ece4d6]' : 'mt-14 pt-10 border-t border-[#ece4d6]'}>
+          {related.sideways.length > 0 && (
+            <div className="mb-6">
+              <h2 className="text-[15px] font-bold text-[#2f2c26] mb-4">이어서 보면 좋은 글</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {related.sideways.map(post => (
+                  <RelatedCard key={post.slug} post={post} />
+                ))}
+              </div>
+            </div>
+          )}
+          {related.next.length > 0 && (
+            <div>
+              <h2 className="text-[15px] font-bold text-[#2f2c26] mb-4">이런 문제도 함께 확인해보세요</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {related.next.map(post => (
+                  <RelatedCard key={post.slug} post={post} />
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

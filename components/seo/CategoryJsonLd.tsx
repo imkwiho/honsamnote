@@ -1,10 +1,13 @@
 import JsonLd from './JsonLd';
-import { SITE_NAME, SITE_URL, absoluteUrl, buildBreadcrumbJsonLd } from '@/lib/seo';
+import { absoluteUrl, buildBreadcrumbJsonLd, breadcrumbNodesToJsonLd, type BreadcrumbNode } from '@/lib/seo';
 
-export default function CategoryJsonLd({ slug, name }: { slug: string; name: string }) {
-  const breadcrumb = buildBreadcrumbJsonLd([
-    { name: SITE_NAME, url: SITE_URL },
-    { name, url: absoluteUrl(`/category/${slug}/`) },
-  ]);
+interface Props {
+  slug: string;
+  breadcrumbNodes: BreadcrumbNode[]; // 화면에 보이는 <Breadcrumb />와 동일 배열
+}
+
+export default function CategoryJsonLd({ slug, breadcrumbNodes }: Props) {
+  const url = absoluteUrl(`/category/${slug}/`);
+  const breadcrumb = buildBreadcrumbJsonLd(breadcrumbNodesToJsonLd(breadcrumbNodes, url));
   return <JsonLd data={breadcrumb} />;
 }
