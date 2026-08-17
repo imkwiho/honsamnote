@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "typecheck:functions": "tsc --noEmit -p tsconfig.functions.json",
     "generate": "ts-node --project tsconfig.scripts.json scripts/generate-post.ts",
+    "seo-audit": "ts-node --project tsconfig.scripts.json scripts/seo-audit.ts",
     "deploy": "npm run build && wrangler pages deploy out",
     "db:migrate:local": "wrangler d1 execute honsamnote-analytics --local --file=migrations/0001_create_analytics_tables.sql",
     "db:migrate:remote": "wrangler d1 execute honsamnote-analytics --remote --file=migrations/0001_create_analytics_tables.sql",
