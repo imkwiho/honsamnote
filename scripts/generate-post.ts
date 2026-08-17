@@ -3,11 +3,13 @@ import path from 'path';
 import crypto from 'crypto';
 import matter from 'gray-matter';
 import { generateBlogPost } from '../lib/gemini';
-import { getPostsByCategory } from '../lib/mdx';
+import { getPostsByCategory, getAllPosts } from '../lib/mdx';
 import { analyzePostForAffiliates } from '../lib/affiliateAnalysis';
 import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type TopicType } from '../lib/topics';
 import { sanitizeMdxContent } from '../lib/mdxSanitize';
 import { readGenerationStatus } from '../lib/generationStatus';
+import { checkForDuplicate } from '../lib/duplicateGate';
+import { type AuditPost } from '../lib/seoAudit';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
 // 정해진 소재가 바닥났을 때, AI가 스스로 새 소재를 고를 글의 유형을 순환시켜 다양성을 준다.
@@ -17,7 +19,7 @@ type Task =
   | { mode: 'seeded'; topic: Topic; categoryName: string }
   | { mode: 'auto'; category: string; categoryName: string; type: TopicType; avoidTitles: string[] };
 
-async function runTask(task: Task, outDir: string, today: string): Promise<string> {
+async function runTask(task: Task, outDir: string, today: string, existingPosts: AuditPost[]): Promise<string> {
   const category = task.mode === 'seeded' ? task.topic.category : task.category;
   const label = task.mode === 'seeded' ? task.topic.seed : '(AI가 새 소재 브레인스토밍)';
   console.log(`생성 시작: [${task.categoryName}] ${label}`);
@@ -32,6 +34,36 @@ async function runTask(task: Task, outDir: string, today: string): Promise<strin
   parsed.content = sanitizeMdxContent(parsed.content);
   parsed.data.category = category;
   parsed.data.categoryName = task.categoryName;
+
+  // §24-26: 저장 직전, 기존 글과 너무 유사한지 확인한다(클러스터+키워드
+  // 기준, lib/seoAudit.ts의 중복 탐지와 동일 로직). 무인 GitHub Actions
+  // 환경이라 대화형 선택은 불가능하므로, 유사도가 높으면 저장을 보류하고
+  // 가장 가까운 기존 글을 로그로 알려 사람이 "기존 글 업데이트" 여부를
+  // 판단하게 한다. (주의: 같은 실행(run) 안에서 동시에 생성 중인 다른
+  // 글들끼리는 서로 비교하지 않는다 — existingPosts는 실행 시작 시점의
+  // 스냅샷이다.)
+  const duplicateCheck = checkForDuplicate(
+    {
+      slug: '__generating__',
+      title: parsed.data.title ?? '',
+      description: parsed.data.description ?? '',
+      date: parsed.data.date ?? today,
+      tags: Array.isArray(parsed.data.tags) ? parsed.data.tags : [],
+      keywords: Array.isArray(parsed.data.keywords) ? parsed.data.keywords : [],
+      category,
+      categoryName: task.categoryName,
+      content: parsed.content,
+    },
+    existingPosts
+  );
+  if (duplicateCheck.blocked) {
+    const closest = duplicateCheck.closestExisting
+      .map(c => `${c.slug}(유사도 ${c.similarity}) "${c.title}"`)
+      .join(', ');
+    throw new Error(
+      `중복 감지로 저장 보류: "${parsed.data.title}" — 기존 글과 검색의도가 거의 동일함. 기존 글 업데이트 후보: ${closest}`
+    );
+  }
 
   // 글 생성 직후, 이 글에 쿠팡 광고를 넣을지/어떤 상품 키워드·위치가 적절한지
   // AI로 한 번 분석해 front matter에 저장한다 (실패해도 글 생성 자체는 계속 진행).
@@ -67,7 +99,7 @@ async function runTask(task: Task, outDir: string, today: string): Promise<strin
 
 // Promise.all로 전부 한 번에 쏘면 Gemini API 분당 요청 한도에 걸리기 쉬워서,
 // 동시에 MAX_CONCURRENCY개씩만 실행하는 워커 풀 방식으로 처리한다.
-async function runWithConcurrency(tasks: Task[], outDir: string, today: string): Promise<PromiseSettledResult<string>[]> {
+async function runWithConcurrency(tasks: Task[], outDir: string, today: string, existingPosts: AuditPost[]): Promise<PromiseSettledResult<string>[]> {
   const results: PromiseSettledResult<string>[] = new Array(tasks.length);
   let cursor = 0;
 
@@ -75,7 +107,7 @@ async function runWithConcurrency(tasks: Task[], outDir: string, today: string):
     while (cursor < tasks.length) {
       const i = cursor++;
       try {
-        results[i] = { status: 'fulfilled', value: await runTask(tasks[i], outDir, today) };
+        results[i] = { status: 'fulfilled', value: await runTask(tasks[i], outDir, today, existingPosts) };
       } catch (reason) {
         results[i] = { status: 'rejected', reason };
       }
@@ -159,7 +191,15 @@ async function main() {
     `(소재 지정 ${seededCount}개, AI 자동 브레인스토밍 ${autoCount}개, 동시 ${Math.min(MAX_CONCURRENCY, tasks.length)}개씩 진행)...\n`
   );
 
-  const results = await runWithConcurrency(tasks, outDir, today);
+  // 중복 검사용 스냅샷 — 이 실행 시작 시점의 기존 글 전체(§24-26).
+  const existingPostsRaw = await getAllPosts();
+  const existingPosts: AuditPost[] = existingPostsRaw.map(p => ({
+    ...p,
+    keywords: p.keywords ?? [],
+    content: '', // 중복 판정에는 제목/keywords/tags/category만 쓰므로 본문은 불필요.
+  }));
+
+  const results = await runWithConcurrency(tasks, outDir, today, existingPosts);
 
   // 성공한 주제만 topics.json에 반영 — 실패한 주제는 pending으로 남아 다음 실행 때 다시 시도된다.
   saveTopics(data);

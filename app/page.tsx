@@ -3,6 +3,7 @@ import Link from 'next/link';
 import SubscribeForm from '@/components/SubscribeForm';
 import QuickStats from '@/components/QuickStats';
 import WebsiteJsonLd from '@/components/seo/WebsiteJsonLd';
+import { PILLARS } from '@/lib/pillars';
 
 // 미니멀 세이지 팔레트
 const SAGE = '#7c8f6e';
@@ -72,7 +73,7 @@ export default async function HomePage() {
           혼자 사는 삶,<br />더 쉽게 만드는 생활 안내서.
         </h1>
         <p className="text-[#8a8377] text-[17px] leading-relaxed max-w-xl mx-auto">
-          혼자 사는 삶을 멋있게 포장하지 않습니다.<br className="hidden sm:block"/>
+          자취방, 원룸, 1인 가구의 생활을 멋있게 포장하지 않습니다.<br className="hidden sm:block"/>
           혼자이기 때문에 더 번거로운 문제를, 실제로 해결해 드립니다.
         </p>
       </section>
@@ -182,6 +183,22 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* ══ ④-2 대표 가이드(Pillar) ══ */}
+      {PILLARS.length > 0 && (
+        <section className="px-4 sm:px-6 mb-10 max-w-6xl mx-auto">
+          <p className="text-[13px] font-semibold tracking-widest uppercase text-[#b0a893] mb-3">대표 가이드</p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {PILLARS.map(pillar => (
+              <Link key={pillar.slug} href={`/guide/${pillar.slug}`}
+                className="bento-card rounded-3xl bg-[#fffdf9] border border-[#f0e9dc] p-6 group hover:border-[#7c8f6e] transition-colors">
+                <h3 className="text-[15px] font-bold text-[#2f2c26] mb-1.5 group-hover:text-[#4f5f45] transition-colors">{pillar.name}</h3>
+                <p className="text-[12.5px] text-[#8a8377] leading-relaxed line-clamp-2">{pillar.intro}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ══ ⑤ 블로그 포스트 벤토 그리드 ══ */}
       {posts.length > 0 && (

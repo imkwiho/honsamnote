@@ -99,7 +99,10 @@ export default function AdminDashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
-        <button onClick={logout} className="text-sm text-gray-500 hover:text-red-500 transition-colors">로그아웃</button>
+        <div className="flex items-center gap-4">
+          <a href="/admin/seo" className="text-sm text-[#5f7052] hover:underline font-medium">SEO 관리 →</a>
+          <button onClick={logout} className="text-sm text-gray-500 hover:text-red-500 transition-colors">로그아웃</button>
+        </div>
       </div>
 
       {/* Cloudflare D1 방문자 통계 (신규) */}

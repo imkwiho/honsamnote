@@ -142,13 +142,19 @@ export function classifyCluster(post: AuditPost): { clusterSlug: string; cluster
 
 export type SearchIntent = '판단형' | '비교형' | '방법형' | '비용형' | '체크형' | '문제해결형' | '질문형';
 
+// 순서가 중요하다: 실제 제목 패턴("혼자 사는 당신, [상황]? [핵심 제안]")은
+// 뒷부분에 진짜 의도가 있고 앞부분엔 훅으로 붙인 수사적 "?"가 자주 섞여
+// 있다(실제 사례: "냉장고에서 쉰내 폭발? ...빠르게 잡고 예방하는 법" —
+// 진짜 의도는 방법형인데 "?"만 보고 질문형으로 오판했었음). 그래서 구체적인
+// 신호(체크리스트/비교/비용/판단/방법)를 먼저 확인하고, 그중 아무것도 안
+// 걸릴 때만 마지막에 범용 "?" 신호로 질문형 처리한다.
 const INTENT_RULES: [RegExp, SearchIntent][] = [
-  [/\?|까요\??$|될까|괜찮을까/, '질문형'],
   [/체크리스트|점검/, '체크형'],
   [/vs\.?|비교|어떤 것이|어느 쪽/, '비교형'],
   [/비용|얼마|요금|가격/, '비용형'],
   [/기준|판단|해도 될까|버려야/, '판단형'],
   [/방법|법$|하는 법|고르는 법/, '방법형'],
+  [/\?|까요\??$|될까|괜찮을까/, '질문형'],
 ];
 
 export function detectSearchIntent(post: AuditPost): SearchIntent {
@@ -454,6 +460,20 @@ export function suggestTitle(post: AuditPost): string {
 
 const CONCLUSION_HEADING_RE = /^##\s*(먼저 확인할 결론|결론|지금 할 일|핵심 결론)\s*$/m;
 
+// 본문에서 뽑아온 문장은 마크다운 서식(**굵게**, `코드`, [링크](url) 등)을
+// 그대로 담고 있을 수 있다 — 검색결과의 meta description은 순수 텍스트로
+// 노출되므로, 그대로 두면 "**직접 해도 충분**합니다"처럼 별표가 그대로
+// 보이는 실제 문제가 생긴다(2단계 title/description 적용 중 발견).
+function stripMarkdownFormatting(text: string): string {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\[(.+?)\]\([^)]*\)/g, '$1')
+    .replace(/~~(.+?)~~/g, '$1')
+    .trim();
+}
+
 export function suggestDescription(post: AuditPost): string {
   const match = CONCLUSION_HEADING_RE.exec(post.content);
   let candidate = post.description;
@@ -462,7 +482,7 @@ export function suggestDescription(post: AuditPost): string {
     const nextHeadingIdx = rest.search(/^##\s/m);
     const section = (nextHeadingIdx === -1 ? rest : rest.slice(0, nextHeadingIdx)).trim();
     const firstSentence = section.split(/(?<=[.!?요다])\s/)[0]?.trim();
-    if (firstSentence && firstSentence.length >= 10) candidate = firstSentence;
+    if (firstSentence && firstSentence.length >= 10) candidate = stripMarkdownFormatting(firstSentence);
   }
   for (const phrase of CLICHE_META_PHRASES) candidate = candidate.split(phrase).join('').trim();
   return candidate.length > META_LENGTH_THRESHOLD ? candidate.slice(0, META_LENGTH_THRESHOLD - 1).trim() + '…' : candidate;

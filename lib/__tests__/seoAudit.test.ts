@@ -13,6 +13,7 @@ import {
   primaryKeyword,
   secondaryKeywords,
   suggestTitle,
+  suggestDescription,
 } from '../seoAudit';
 
 function makePost(overrides: Partial<AuditPost>): AuditPost {
@@ -58,6 +59,18 @@ describe('detectSearchIntent', () => {
 
   it('매칭되는 패턴이 없으면 문제해결형을 기본값으로 반환한다', () => {
     expect(detectSearchIntent(makePost({ title: '평범한 일반 제목' }))).toBe('문제해결형');
+  });
+
+  it('제목 앞부분의 수사적 "?"보다 뒷부분의 구체적인 신호(방법/비교 등)를 우선한다', () => {
+    // 실제 사례: "냉장고에서 쉰내 폭발? 1인 가구 냉장고 냄새, 빠르게 잡고
+    // 예방하는 법" — "?"만 보면 질문형이지만 진짜 의도는 방법형.
+    expect(detectSearchIntent(makePost({ title: '냉장고에서 쉰내 폭발? 빠르게 잡고 예방하는 법' }))).toBe('방법형');
+    // "?"와 "vs"가 함께 있으면 비교형이 이겨야 한다.
+    expect(detectSearchIntent(makePost({ title: '설거지 쌓인다면? 식기세척기 vs 손 설거지, 현명한 선택 기준' }))).toBe('비교형');
+  });
+
+  it('구체적인 신호가 전혀 없는 순수 질문형 제목은 여전히 질문형으로 판단한다', () => {
+    expect(detectSearchIntent(makePost({ title: '싹 난 감자 먹어도 될까?' }))).toBe('질문형');
   });
 });
 
@@ -333,6 +346,47 @@ describe('suggestTitle', () => {
     const post = makePost({ title: '식기세척기 글', keywords: ['미니 식기세척기', '1인 가구 주방'] });
     const result = suggestTitle(post);
     expect(result).not.toContain('｜');
+  });
+});
+
+describe('suggestDescription', () => {
+  it('"결론" 섹션의 첫 문장을 meta description으로 뽑아온다', () => {
+    const post = makePost({
+      description: '원래 설명',
+      content: '## 문제 상황\n본문\n\n## 결론\n에어컨 필터 청소는 직접 해도 충분합니다. 나머지 내용은 생략.\n\n## 체크리스트\n항목',
+    });
+    expect(suggestDescription(post)).toBe('에어컨 필터 청소는 직접 해도 충분합니다.');
+  });
+
+  it('실제 버그 재현: 추출한 문장의 마크다운 서식(**굵게** 등)을 제거한다', () => {
+    // 실제 사례: "에어컨 필터 청소는 대부분의 1인 가구가 **직접 해도
+    // 충분**합니다." — 별표가 그대로 meta description에 노출되던 문제.
+    const post = makePost({
+      content: '## 결론\n에어컨 필터 청소는 대부분의 1인 가구가 **직접 해도 충분**합니다. 나머지.',
+    });
+    const result = suggestDescription(post);
+    expect(result).not.toContain('*');
+    expect(result).toBe('에어컨 필터 청소는 대부분의 1인 가구가 직접 해도 충분합니다.');
+  });
+
+  it('`코드`, [링크](url), ~~취소선~~ 서식도 전부 제거한다', () => {
+    const post = makePost({
+      content: '## 결론\n`코드` 표현과 [링크](https://example.com)와 ~~취소선~~이 섞인 문장입니다.',
+    });
+    const result = suggestDescription(post);
+    expect(result).toBe('코드 표현과 링크와 취소선이 섞인 문장입니다.');
+  });
+
+  it('"결론" 섹션이 없으면 원래 description을 그대로 쓴다', () => {
+    const post = makePost({ description: '원래 설명입니다.', content: '## 문제 상황\n본문만 있음' });
+    expect(suggestDescription(post)).toBe('원래 설명입니다.');
+  });
+
+  it('155자를 넘으면 잘라내고 말줄임표를 붙인다', () => {
+    const post = makePost({ description: '가'.repeat(200) });
+    const result = suggestDescription(post);
+    expect(result.length).toBeLessThanOrEqual(155);
+    expect(result.endsWith('…')).toBe(true);
   });
 
   it('보조 키워드가 없으면 ｜ 구분자를 억지로 채우지 않는다', () => {
