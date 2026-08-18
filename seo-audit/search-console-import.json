@@ -1,0 +1,15 @@
+{
+  "importedAt": "2026-08-18T08:24:56.510Z",
+  "source": "PLACEHOLDER — 실제 데이터 미연결",
+  "note": "Google Search Console CSV를 임포트하려면: npx tsx scripts/import-search-console.ts <query.csv> [page.csv]",
+  "queryRows": [],
+  "pageRows": [],
+  "summary": {
+    "totalQueries": 0,
+    "totalClicks": 0,
+    "totalImpressions": 0,
+    "avgPosition": null,
+    "top10Queries": [],
+    "top10Pages": []
+  }
+}

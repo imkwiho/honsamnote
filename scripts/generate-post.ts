@@ -11,6 +11,7 @@ import { readGenerationStatus } from '../lib/generationStatus';
 import { checkForDuplicate } from '../lib/duplicateGate';
 import { checkPrimaryPageInfringement } from '../lib/primaryPages';
 import { type AuditPost } from '../lib/seoAudit';
+import { runFactcheckGate, reportFactcheckGate } from '../lib/factcheckGate';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
 // 정해진 소재가 바닥났을 때, AI가 스스로 새 소재를 고를 글의 유형을 순환시켜 다양성을 준다.
@@ -87,6 +88,30 @@ async function runTask(task: Task, outDir: string, today: string, existingPosts:
   );
   if (primaryPageCheck.infringes) {
     console.warn(`⚠️  ${primaryPageCheck.message}`);
+  }
+
+  // §21-22 SEO 4단계: 팩트체크 게이트 — 고위험 카테고리 탐지.
+  // P1(법률/안전/보증금) 글은 발행 보류 권고, P2는 경고만.
+  const postForGate: AuditPost = {
+    slug: '__generating__',
+    title: parsed.data.title ?? '',
+    description: parsed.data.description ?? '',
+    date: parsed.data.date ?? today,
+    tags: Array.isArray(parsed.data.tags) ? parsed.data.tags : [],
+    keywords: Array.isArray(parsed.data.keywords) ? parsed.data.keywords : [],
+    category,
+    categoryName: task.categoryName,
+    content: parsed.content,
+  };
+  const gateResult = runFactcheckGate(postForGate);
+  const shouldHold = reportFactcheckGate(gateResult, parsed.data.title ?? '__generating__');
+  if (shouldHold) {
+    // P1 고위험: 파일 저장은 하되 front matter에 상태 기록
+    parsed.data.factcheckStatus = 'HIGH_RISK_HOLD';
+    parsed.data.factcheckReason = gateResult.reason;
+  } else if (gateResult.status === 'FACTCHECK_REQUIRED') {
+    parsed.data.factcheckStatus = 'FACTCHECK_REQUIRED';
+    parsed.data.factcheckReason = gateResult.reason;
   }
 
   // 글 생성 직후, 이 글에 쿠팡 광고를 넣을지/어떤 상품 키워드·위치가 적절한지

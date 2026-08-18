@@ -4,6 +4,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+// 신뢰 상태 레이블 (4단계 §23)
+type TrustStatus =
+  | 'VERIFIED'
+  | 'REVIEW_REQUIRED'
+  | 'HIGH_RISK_HOLD'
+  | 'FACTCHECK_REQUIRED'
+  | 'OUTDATED_RISK'
+  | 'CONTENT_ALIGNMENT'
+  | 'STRONG'
+  | 'DUPLICATE_RISK';
+
 interface SeoPostRow {
   slug: string;
   title: string;
@@ -26,6 +37,11 @@ interface SeoPostRow {
   isMergeCandidate: boolean;
   isCannibalizationCandidate: boolean;
   isFactcheckNeeded: boolean;
+  // 4단계 추가
+  trustStatus?: TrustStatus | null;
+  factcheckStatus?: string | null;
+  isPrimaryPage?: boolean;
+  authorityScore?: number | null;
 }
 
 interface SeoData {
@@ -113,7 +129,14 @@ export default function AdminSeoPage() {
         <h1 className="text-2xl font-bold text-gray-900">SEO 관리</h1>
         <Link href="/admin/dashboard" className="text-sm text-gray-500 hover:text-[#5f7052] transition-colors">← 대시보드로</Link>
       </div>
-      <p className="text-[12px] text-gray-400 mb-8">생성 시각: {new Date(data.generatedAt).toLocaleString('ko-KR')} (빌드 시점 기준 정적 스냅샷)</p>
+      <p className="text-[12px] text-gray-400 mb-4">생성 시각: {new Date(data.generatedAt).toLocaleString('ko-KR')} (빌드 시점 기준 정적 스냅샷)</p>
+
+      {/* 검색 데이터 연결 상태 (4단계 §20) */}
+      <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-[12px] text-amber-700 flex items-center gap-2">
+        <span>📡</span>
+        <span>검색 데이터 미연결 — Google Search Console 데이터를 연결하면 실제 클릭·노출·순위 데이터를 확인할 수 있습니다.</span>
+        <code className="ml-auto text-[11px] bg-amber-100 px-2 py-0.5 rounded">npx tsx scripts/import-search-console.ts &lt;gsc-export.csv&gt;</code>
+      </div>
 
       {/* 전체 현황 카드 */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
@@ -198,6 +221,10 @@ export default function AdminSeoPage() {
                     {p.isMergeCandidate && <Badge label="통합후보" tone="HIGH" />}
                     {p.isCannibalizationCandidate && <Badge label="역할분리" tone="MEDIUM" />}
                     {p.isFactcheckNeeded && <Badge label="fact-check" tone="LOW" />}
+                    {p.factcheckStatus === 'HIGH_RISK_HOLD' && <Badge label="HIGH-RISK" tone="HIGH" />}
+                    {p.factcheckStatus === 'FACTCHECK_REQUIRED' && <Badge label="검증필요" tone="MEDIUM" />}
+                    {p.isPrimaryPage && <Badge label="대표글" tone="HIGH" />}
+                    {p.authorityScore != null && p.authorityScore < 30 && <Badge label="권위낮음" tone="LOW" />}
                   </div>
                 </td>
               </tr>

@@ -1,12 +1,15 @@
-// SEO 2단계 §27-28/§33 — 마이그레이션 이후 전수 검사. content/blog/를
-// 읽기만 한다. out/이 존재하면(직전에 npm run build를 실행한 경우) 실제
-// 정적 HTML 산출물도 표본 검사한다.
+// SEO 2단계 §27-28/§33 + 4단계 §35 — 마이그레이션 이후 전수 검사 (4단계 강화).
+// content/blog/를 읽기만 한다. out/이 존재하면(직전에 npm run build를 실행한 경우)
+// 실제 정적 HTML 산출물도 표본 검사한다.
+// 4단계 추가 검사: Primary Page 중복·누락, 부러진 Pillar children, title-content mismatch,
+// orphan 심화, redirect 검증.
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
-import { type AuditPost, classifyClusterDetailed, findDuplicateDescriptionSlugs } from '../lib/seoAudit';
+import { type AuditPost, classifyClusterDetailed, findDuplicateDescriptionSlugs, primaryKeyword } from '../lib/seoAudit';
 import { PILLARS } from '../lib/pillars';
 import { buildLinkGraph, findOrphanPages } from '../lib/linkGraph';
+import { computePrimaryPages } from '../lib/primaryPages';
 
 const BLOG_DIR = path.join(process.cwd(), 'content', 'blog');
 const OUT_DIR = path.join(process.cwd(), 'out');
@@ -107,6 +110,60 @@ function main() {
     }
   }
 
+  // 8) 4단계 강화 검사
+  const primaryPages = computePrimaryPages(posts, graph);
+
+  // 8a) Primary Page가 없는 클러스터 중 규모 큰 것
+  const clusterSizeMap = new Map<string, number>();
+  for (const post of posts) {
+    const { clusterSlug } = classifyClusterDetailed(post);
+    clusterSizeMap.set(clusterSlug, (clusterSizeMap.get(clusterSlug) ?? 0) + 1);
+  }
+  for (const [clusterSlug, size] of clusterSizeMap) {
+    if (size >= 8 && !primaryPages.has(clusterSlug)) {
+      findings.push({ severity: 'warning', category: 'primary-page-missing', detail: `클러스터 '${clusterSlug}' (${size}개 글) — Primary Page 없음` });
+    }
+  }
+
+  // 8b) Primary Page의 incoming links가 1 미만인 클러스터
+  for (const [clusterSlug, pp] of primaryPages.entries()) {
+    const incomingCount = graph.incoming.get(pp.primarySlug)?.size ?? 0;
+    if (incomingCount < 1 && (clusterSizeMap.get(clusterSlug) ?? 0) >= 5) {
+      findings.push({ severity: 'warning', category: 'primary-page-isolated', detail: `${pp.primarySlug}: Primary Page이지만 내부 링크가 없음 (클러스터: ${clusterSlug})` });
+    }
+  }
+
+  // 8c) title-content mismatch 간략 검사 (제목 핵심 키워드가 첫 300자에 없는 경우)
+  const mismatchCount = { count: 0 };
+  for (const post of posts) {
+    const kw = primaryKeyword(post);
+    if (!kw) continue;
+    const opening = post.content.slice(0, 300);
+    if (!opening.includes(kw)) mismatchCount.count++;
+  }
+  if (mismatchCount.count > 0) {
+    findings.push({ severity: 'warning', category: 'title-content-mismatch', detail: `${mismatchCount.count}개 글에서 대표 키워드가 본문 첫 300자에 없음 — seo-audit/title-content-mismatch.csv 참조` });
+  }
+
+  // 8d) wrangler.toml 리다이렉트 검증 (redirect-map.csv와 대조)
+  const redirectMapPath = path.join(AUDIT_DIR, 'redirect-map.csv');
+  const wranglerPath = path.join(process.cwd(), 'wrangler.toml');
+  if (fs.existsSync(redirectMapPath) && fs.existsSync(wranglerPath)) {
+    const wranglerContent = fs.readFileSync(wranglerPath, 'utf-8');
+    const mapLines = fs.readFileSync(redirectMapPath, 'utf-8').replace(/^﻿/, '').split('\n').slice(1).filter(Boolean);
+    for (const line of mapLines) {
+      const parts = line.split(',');
+      const fromSlug = parts[0]?.trim();
+      const toSlug = parts[1]?.trim();
+      const status = parts[2]?.trim();
+      if (!fromSlug || !toSlug || status !== '301') continue;
+      const fromPath = `/blog/${fromSlug}/`;
+      if (!wranglerContent.includes(fromPath)) {
+        findings.push({ severity: 'warning', category: 'redirect-missing-wrangler', detail: `redirect-map.csv의 301 리다이렉트(${fromSlug} → ${toSlug})가 wrangler.toml에 없음` });
+      }
+    }
+  }
+
   // 8) 정적 빌드 산출물이 있으면 표본 검사(canonical, JSON-LD 파싱, sitemap.xml)
   const buildFindings: Finding[] = [];
   if (fs.existsSync(OUT_DIR)) {
@@ -164,7 +221,7 @@ function main() {
   }
 
   const lines: string[] = [];
-  lines.push('# 혼삶노트 SEO 2단계 마이그레이션 검증 보고서');
+  lines.push('# 혼삶노트 SEO 검증 보고서 (2단계 + 4단계 강화)');
   lines.push('');
   lines.push(`생성일: ${new Date().toISOString().slice(0, 10)}`);
   lines.push(`out/ 산출물 표본 검사: ${fs.existsSync(OUT_DIR) ? '포함됨' : '건너뜀(out/ 없음 — 직전에 npm run build 필요)'}`);
