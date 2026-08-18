@@ -2,6 +2,14 @@
 // 받은 3개 클러스터(oneroom-storage/laundry-clothing/loneliness-isolation)만
 // 다룬다. intro/whatItSolves 문구는 실제 하위 글 목록을 직접 훑어보고 쓴
 // 것이며, 존재하지 않는 통계나 효과를 지어내지 않는다.
+//
+// 3단계 §5-6에서 3개(emergency-response/kitchen-cleaning/bathroom-cleaning)
+// 추가 — seo-audit/pillar-quality-review.csv에서 점수가 가장 높고(53.8/52.4/
+// 49.4점, 그다음 fire-prevention 42.5점과 뚜렷한 격차) 실제 멤버 글 제목을
+// 직접 훑어봤을 때 5가지 질문(뭘 먼저 알아야 하는지/뭘 먼저 해결해야 하는지/
+// 상황별로 어느 글을 봐야 하는지/흔한 실수/다음에 뭘 봐야 하는지)에 답할
+// 수 있다고 판단된 3개만 채택했다(10개 중 7개는 보류 — seo-audit/
+// pillar3-decisions.md 참고).
 import { type AuditPost } from './seoAudit';
 
 export interface PillarSubTopic {
@@ -68,6 +76,55 @@ export const PILLARS: Pillar[] = [
       { name: '관계·소셜 에너지 관리', matchHints: ['소셜 에너지', '친구', '관계', '커뮤니티', '약속'] },
       { name: '특별한 날 대처', matchHints: ['명절', '기념일', '연말연시', '이별'] },
       { name: '전문적인 도움 찾기', matchHints: ['상담', '반려동물', 'AI 스피커', '감정'] },
+    ],
+  },
+  {
+    id: 'emergency-response-guide',
+    slug: 'emergency',
+    clusterId: 'emergency-response',
+    name: '혼자 사는 사람을 위한 응급상황 대처 가이드',
+    intro:
+      '혼자 사는 사람에게 응급상황은 두 배로 두렵습니다. 몸이 아프거나 다쳤을 때, 집에 가스·누수·정전 같은 문제가 생겼을 때, 태풍이나 지진 같은 재난이 닥쳤을 때 — 당황하지 않고 바로 확인할 수 있도록 상황별 대처법과 미리 준비해두면 좋은 것들을 모았습니다.',
+    whatItSolves:
+      '아프거나 다쳤을 때 누구에게도 바로 물어볼 수 없는 상황에서, 지금 뭘 해야 하는지와 평소에 뭘 준비해두면 좋은지를 실제 상황별로 확인할 수 있게 합니다.',
+    subTopics: [
+      { name: '건강 응급상황 대처', matchHints: ['아플 때', '고열', '알레르기', '낙상', '베였을 때', '데였을 때', '식중독', '응급처치', '병원'] },
+      { name: '재난·정전 대비', matchHints: ['지진', '태풍', '호우', '강풍', '정전', '비상식량', '비상 키트', '파워뱅크', 'UPS'] },
+      { name: '집 안전사고 대처', matchHints: ['가스 냄새', '일산화탄소', '누수', '배수구', '창문', '화재 경보기', '물 끊김', '전기 끊김', '역류'] },
+      { name: '방범·보안', matchHints: ['빈집털이', '열쇠', '도어록', '방문자', '해킹', '호신', '귀가'] },
+      { name: '비상 연락·기록 준비', matchHints: ['비상연락망', '의료 정보', '지갑', '신분증', '응급 ID'] },
+    ],
+  },
+  {
+    id: 'kitchen-cleaning-guide',
+    slug: 'kitchen-cleaning',
+    clusterId: 'kitchen-cleaning',
+    name: '1인 가구 주방 청소 가이드',
+    intro:
+      '주방은 매일 쓰는 만큼 관리를 미루면 기름때와 냄새가 가장 먼저 쌓이는 공간입니다. 후드·오븐·싱크대 같은 자리별 청소법부터 밥솥·식기세척기 같은 가전 관리, 행주·폐식용유처럼 사소하지만 매번 헷갈리는 것들까지 모았습니다.',
+    whatItSolves:
+      '요리 후 방치하면 금방 찌든 때가 되는 주방을, 퇴근 후 짧은 시간 안에 관리할 수 있게 합니다.',
+    subTopics: [
+      { name: '기름때·후드·오븐 청소', matchHints: ['기름때', '후드', '오븐', '가스레인지'] },
+      { name: '냄새·배수구 관리', matchHints: ['싱크대 냄새', '배수구', '초파리'] },
+      { name: '주방 가전 관리', matchHints: ['전자레인지', '밥솥', '식기세척기'] },
+      { name: '위생용품·수납', matchHints: ['행주', '폐식용유', '수납장'] },
+    ],
+  },
+  {
+    id: 'bathroom-cleaning-guide',
+    slug: 'bathroom-cleaning',
+    clusterId: 'bathroom-cleaning',
+    name: '1인 가구 욕실 청소 가이드',
+    intro:
+      '욕실은 습기 때문에 관리를 소홀히 하면 곰팡이와 냄새가 가장 빨리 티가 나는 공간입니다. 곰팡이 제거부터 배수구 냄새, 변기·샤워기 물때 관리, 여름철 날벌레 퇴치까지 상황별로 모았습니다.',
+    whatItSolves:
+      '습기가 많은 욕실에서 곰팡이·냄새·물때를 반복해서 없애야 하는 수고를 줄여줍니다.',
+    subTopics: [
+      { name: '곰팡이 제거', matchHints: ['곰팡이'] },
+      { name: '배수구·냄새 관리', matchHints: ['배수구', '환풍기 냄새', '악취'] },
+      { name: '변기·샤워기 관리', matchHints: ['변기', '샤워기'] },
+      { name: '벌레 퇴치', matchHints: ['날벌레', '벌레'] },
     ],
   },
 ];

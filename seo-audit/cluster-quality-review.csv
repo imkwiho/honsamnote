@@ -1,0 +1,52 @@
+﻿cluster_id,cluster_name,category,article_count,avg_match_score,dominant_intent,intent_consistency_pct,has_representative_article,avg_internal_links,has_pillar,most_similar_cluster,similar_cluster_overlap,proposed_action,reason
+oneroom-storage,원룸 전체 수납,storage,56,1.79,질문형,50,예,11.68,예,주방 수납,0.02,keep(이미 Pillar 있음),이미 /guide/oneroom-storage/ Pillar 페이지가 있음 — 구조 변경 불필요
+general-living-cost,생활비 절약 전반,cost,53,1.43,비교형,62.3,아니오,11.57,아니오,구독·정기결제,0.01,no-Pillar-needed(카테고리 포괄),"글 수(53)는 많지만 클러스터 정의 자체가 카테고리 전체와 거의 같은 ""전반"" 성격 — 검색의도가 너무 넓어 Pillar 후보에서 제외(2단계 pillar-plan.csv와 동일 판정)"
+emergency-response,응급상황 대처,safety,42,1.24,방법형,26.2,예,11.02,아니오,도어락·보안,0.04,split-too-broad,지배적 검색의도(방법형) 비중이 26.2%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+food-waste,식재료 낭비 줄이기,food,27,1.19,질문형,40.7,아니오,11.59,아니오,장보기·식비절약,0.04,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+laundry-clothing,세탁·옷관리,cleaning,23,1.78,질문형,47.8,예,12.7,예,욕실 청소,0.02,keep(이미 Pillar 있음),이미 /guide/laundry/ Pillar 페이지가 있음 — 구조 변경 불필요
+loneliness-isolation,외로움·고립감,lifestyle,19,1.58,질문형,42.1,예,12.42,예,생활리듬·시간관리,0.03,keep(이미 Pillar 있음),이미 /guide/loneliness/ Pillar 페이지가 있음 — 구조 변경 불필요
+bathroom-cleaning,욕실 청소,cleaning,14,1.21,질문형,85.7,아니오,11.79,아니오,주방 청소,0.05,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+deposit,보증금,housing,13,1.38,질문형,30.8,아니오,11.31,아니오,전월세 계약,0.04,split-too-broad,지배적 검색의도(질문형) 비중이 30.8%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+kitchen-cleaning,주방 청소,cleaning,12,1.92,질문형,58.3,예,11.17,아니오,욕실 청소,0.05,keep,현재 상태로 유지 — 별도 조치 불필요
+daily-rhythm,생활리듬·시간관리,lifestyle,12,1.17,문제해결형,41.7,아니오,13.25,아니오,외로움·고립감,0.03,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+ingredient-storage,식재료 보관,food,11,1.36,문제해결형,45.5,예,10.91,아니오,장보기·식비절약,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+lease-contract,전월세 계약,housing,11,1.27,방법형,36.4,아니오,11.18,아니오,보증금,0.04,split-too-broad,지배적 검색의도(방법형) 비중이 36.4%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+solo-meal-recipe,혼밥 레시피·식단,food,10,1.1,비교형,60,아니오,13.8,아니오,식재료 낭비 줄이기,0.03,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+fire-prevention,화재 예방,safety,10,1.5,비교형,50,예,12.9,아니오,전기 안전,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+lock-security,도어락·보안,safety,10,1.4,문제해결형,30,아니오,14.3,아니오,응급상황 대처,0.04,split-too-broad,지배적 검색의도(문제해결형) 비중이 30%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+moving-prep,이사 준비,housing,10,1.4,비교형,30,예,13.5,아니오,보증금,0.02,split-too-broad,지배적 검색의도(비교형) 비중이 30%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+relationship-management,관계 관리,lifestyle,8,1.38,질문형,37.5,아니오,11.38,아니오,이웃·층간소음,0.03,split-too-broad,지배적 검색의도(질문형) 비중이 37.5%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+odor-removal,냄새 제거,cleaning,7,1.43,방법형,42.9,아니오,12,아니오,가전제품 청소,0.03,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+cleaning-tools-time,청소도구·시간절약,cleaning,7,1.71,비교형,57.1,예,14.71,아니오,욕실 청소,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+grocery-shopping,장보기·식비절약,food,7,1.86,비교형,57.1,예,12,아니오,냉동·소분,0.05,keep,현재 상태로 유지 — 별도 조치 불필요
+kitchen-appliances,주방가전,products,7,1.14,비교형,42.9,아니오,11.71,아니오,공기청정기·환경가전,0.01,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+freeze-portion,냉동·소분,food,6,1.83,질문형,50,아니오,13,아니오,장보기·식비절약,0.05,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+kitchen-storage,주방 수납,storage,6,1.67,비교형,50,아니오,14.83,아니오,원룸 전체 수납,0.02,rename-or-refine-matchTerms,최고 matchScore가 2로 낮음(대표 글이라 할 만한 글이 없음) — 클러스터 이름/matchTerms가 실제 글 내용과 느슨하게만 맞음
+landlord-issues,집주인 문제,housing,6,1.33,방법형,33.3,아니오,11.67,아니오,전월세 계약,0.01,split-too-broad,지배적 검색의도(방법형) 비중이 33.3%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+cleaning-appliances,청소가전,products,5,1.6,판단형,40,예,11.8,아니오,공기청정기·환경가전,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+closet-clothing,옷장·옷정리,storage,4,3,질문형,50,예,11.25,아니오,현관 수납,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+pest-control,해충 퇴치,safety,4,3,방법형,75,예,9.25,아니오,전기 안전,0.02,keep,현재 상태로 유지 — 별도 조치 불필요
+air-environment,공기청정기·환경가전,products,4,1.25,비교형,50,아니오,11.25,아니오,청소가전,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+entryway-storage,현관 수납,storage,3,2,질문형,66.7,아니오,8,아니오,옷장·옷정리,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+telecom-bill,통신비,cost,3,1.67,비교형,100,아니오,8,아니오,전기요금,0,keep,현재 상태로 유지 — 별도 조치 불필요
+leak-accident,누수·생활사고,safety,3,1.33,방법형,66.7,아니오,7.33,아니오,가스 안전,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+management-fee,관리비,housing,3,1,질문형,33.3,아니오,10.33,아니오,이사 준비,0.01,split-too-broad,지배적 검색의도(질문형) 비중이 33.3%로 낮음 — 서로 다른 검색의도가 섞여 있어 세분화 검토
+safety-products,생활안전용품,products,3,2,비교형,100,아니오,9.67,아니오,주방가전,0,keep,현재 상태로 유지 — 별도 조치 불필요
+appliance-cleaning,가전제품 청소,cleaning,2,1,비교형,50,아니오,6.5,아니오,쓰레기·폐기,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+trash-disposal,쓰레기·폐기,cleaning,2,1,질문형,50,아니오,7,아니오,가전제품 청소,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+solo-cooking-tips,자취요리 팁,food,2,1,비교형,50,아니오,6.5,아니오,장보기·식비절약,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+appliance-layout,가전 배치·공간활용,storage,2,1.5,문제해결형,50,아니오,23.5,아니오,욕실 수납,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+electricity-bill,전기요금,cost,2,2.5,비교형,50,예,5.5,아니오,가스요금,0.08,keep,현재 상태로 유지 — 별도 조치 불필요
+electrical-safety,전기 안전,safety,2,1,방법형,100,아니오,5,아니오,화재 예방,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+neighbor-noise,이웃·층간소음,lifestyle,2,2,문제해결형,50,아니오,6.5,아니오,관계 관리,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+cable-small-items,케이블·소형물품 정리,storage,1,2,질문형,100,아니오,7,아니오,원룸 전체 수납,0.01,keep,현재 상태로 유지 — 별도 조치 불필요
+bathroom-storage,욕실 수납,storage,1,2,질문형,100,아니오,3,아니오,가전 배치·공간활용,0.04,keep,현재 상태로 유지 — 별도 조치 불필요
+gas-bill,가스요금,cost,1,3,비용형,100,예,19,아니오,전기요금,0.08,keep,현재 상태로 유지 — 별도 조치 불필요
+subscription-cost,구독·정기결제,cost,1,1,방법형,100,아니오,5,아니오,생활비 절약 전반,0.01,keep,현재 상태로 유지 — 별도 조치 불필요
+gas-safety,가스 안전,safety,1,1,방법형,100,아니오,3,아니오,누수·생활사고,0.03,keep,현재 상태로 유지 — 별도 조치 불필요
+move-out-registration,전입신고·퇴실,housing,1,2,체크형,100,아니오,4,아니오,전월세 계약,0.01,keep,현재 상태로 유지 — 별도 조치 불필요
+storage-products,수납용품,products,1,1,방법형,100,아니오,4,아니오,주방가전,0,keep,현재 상태로 유지 — 별도 조치 불필요
+living-services,생활서비스,products,1,1,비용형,100,아니오,3,아니오,주방가전,0,keep,현재 상태로 유지 — 별도 조치 불필요
+solo-travel-hobby,혼자여행·취미,lifestyle,1,2,질문형,100,아니오,4,아니오,외로움·고립감,0.01,keep,현재 상태로 유지 — 별도 조치 불필요
+furniture-rental-cost,가구·렌탈비용,cost,0,0,,0,아니오,0,아니오,,0,no-members,현재 이 클러스터에 속하는 글이 0개(matchTerms를 실제로 맞추는 글이 없음) — matchTerms 재검토 필요
+finding-oneroom,원룸 구하기,housing,0,0,,0,아니오,0,아니오,,0,no-members,현재 이 클러스터에 속하는 글이 0개(matchTerms를 실제로 맞추는 글이 없음) — matchTerms 재검토 필요

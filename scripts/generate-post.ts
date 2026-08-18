@@ -9,6 +9,7 @@ import { loadTopics, saveTopics, pickTopics, getCategoryName, type Topic, type T
 import { sanitizeMdxContent } from '../lib/mdxSanitize';
 import { readGenerationStatus } from '../lib/generationStatus';
 import { checkForDuplicate } from '../lib/duplicateGate';
+import { checkPrimaryPageInfringement } from '../lib/primaryPages';
 import { type AuditPost } from '../lib/seoAudit';
 
 const MAX_CONCURRENCY = 4; // Gemini API 요청 한도 보호용 동시 실행 개수
@@ -63,6 +64,29 @@ async function runTask(task: Task, outDir: string, today: string, existingPosts:
     throw new Error(
       `중복 감지로 저장 보류: "${parsed.data.title}" — 기존 글과 검색의도가 거의 동일함. 기존 글 업데이트 후보: ${closest}`
     );
+  }
+
+  // §24-25: 통합 수준의 중복은 아니지만(위 duplicateGate를 통과), 이 글의
+  // 클러스터에 이미 대표 콘텐츠(Primary Page)가 있고 검색의도까지 같다면
+  // 새 글을 만들기보다 기존 글 업데이트가 기본 선택지여야 한다. 무인 CI라
+  // 차단하지는 않고 로그로만 경고한다(저장은 계속 진행) — 사람이 로그를
+  // 보고 다음 생성 대상을 조정할 수 있게.
+  const primaryPageCheck = checkPrimaryPageInfringement(
+    {
+      slug: '__generating__',
+      title: parsed.data.title ?? '',
+      description: parsed.data.description ?? '',
+      date: parsed.data.date ?? today,
+      tags: Array.isArray(parsed.data.tags) ? parsed.data.tags : [],
+      keywords: Array.isArray(parsed.data.keywords) ? parsed.data.keywords : [],
+      category,
+      categoryName: task.categoryName,
+      content: parsed.content,
+    },
+    existingPosts
+  );
+  if (primaryPageCheck.infringes) {
+    console.warn(`⚠️  ${primaryPageCheck.message}`);
   }
 
   // 글 생성 직후, 이 글에 쿠팡 광고를 넣을지/어떤 상품 키워드·위치가 적절한지

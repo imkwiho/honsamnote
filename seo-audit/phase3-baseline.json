@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-08-17T11:07:30.598Z",
+  "totalPosts": 565,
+  "baselinePostCount": 565,
+  "newlyPublishedSincePhase2": [],
+  "byCategory": {
+    "(없음)": 1,
+    "cost": 64,
+    "food": 78,
+    "cleaning": 82,
+    "housing": 55,
+    "lifestyle": 44,
+    "products": 83,
+    "safety": 80,
+    "storage": 78
+  },
+  "clusterAssignedCount": 442,
+  "clusterUnassignedCount": 123,
+  "orphanCount": 48,
+  "avgOutgoingLinks": 4.91,
+  "pillarCount": 3,
+  "pillarSlugs": [
+    "oneroom-storage",
+    "laundry",
+    "loneliness"
+  ],
+  "mergeCandidateCount": 4,
+  "cannibalizationCandidateCount": 113,
+  "factcheckNeededCount": 91
+}

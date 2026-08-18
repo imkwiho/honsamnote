@@ -18,9 +18,18 @@ function makePost(overrides: Partial<AuditPost>): AuditPost {
 }
 
 describe('PILLARS', () => {
-  it('A등급으로 분류된 3개 클러스터에만 존재한다', () => {
+  it('정의된 6개 Pillar 클러스터를 포함한다(A등급 3개 + 3단계 추가 3개)', () => {
     const clusterIds = PILLARS.map(p => p.clusterId).sort();
-    expect(clusterIds).toEqual(['laundry-clothing', 'loneliness-isolation', 'oneroom-storage'].sort());
+    // A등급(2단계): oneroom-storage / laundry-clothing / loneliness-isolation
+    // 3단계 추가(B등급 중 상위): emergency-response / kitchen-cleaning / bathroom-cleaning
+    expect(clusterIds).toEqual([
+      'bathroom-cleaning',
+      'emergency-response',
+      'kitchen-cleaning',
+      'laundry-clothing',
+      'loneliness-isolation',
+      'oneroom-storage',
+    ]);
   });
 
   it('각 Pillar는 intro/whatItSolves가 비어있지 않고, 하위 주제를 2개 이상 가진다', () => {

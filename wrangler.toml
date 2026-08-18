@@ -4,6 +4,13 @@ compatibility_date = "2024-01-01"
 [site]
 bucket = "./out"
 
+# SEO 3단계 MERGE redirect — 2026-08-10 바퀴벌레 중복 쌍(유사도 0.75)
+# 흡수 페이지 → 대표 페이지 301 redirect
+[[redirects]]
+from = "/blog/2026-08-10-safety-auto-46a836/"
+to = "/blog/2026-08-10-safety-auto-e68c91/"
+status = 301
+
 [[redirects]]
 from = "/*"
 to = "/404.html"
