@@ -1,6 +1,5 @@
-// SEO 2단계 §19-20 — /admin/seo 대시보드가 쓰는 데이터. app/api/posts/route.ts와
-// 동일하게 force-static Route Handler로 빌드 타임에 미리 JSON을 구워
-// 낸다(정적 export라 새 Cloudflare Function이나 D1 테이블 없이도 가능).
+// SEO 2단계 §19-20 + 5단계 §28-30 — /admin/seo 대시보드가 쓰는 데이터.
+// force-static Route Handler로 빌드 타임에 미리 JSON을 구워낸다.
 import fs from 'fs';
 import path from 'path';
 import matter from 'gray-matter';
@@ -8,6 +7,8 @@ import { type AuditPost, classifyClusterDetailed, needsTitleFix, needsMetaFix, f
 import { computeSeoMetadata } from '@/lib/seoMetadata';
 import { getPillarForCluster } from '@/lib/pillars';
 import { buildLinkGraph } from '@/lib/linkGraph';
+
+const AUDIT_DIR = path.join(process.cwd(), 'seo-audit');
 
 export const dynamic = 'force-static';
 
@@ -95,5 +96,68 @@ export async function GET() {
     sitemapIncluded: posts.length, // 모든 공개 글이 sitemap.ts에 그대로 포함됨(별도 노출 제어 없음)
   };
 
-  return Response.json({ generatedAt: new Date().toISOString(), summary, posts: rows });
+  // §28-30: Factcheck 현황 + GSC 상태 (seo-audit/ 파일에서 빌드 타임 읽기)
+  let factcheckSummary = null;
+  try {
+    // P1 분류 결과
+    const p1Path = path.join(AUDIT_DIR, 'factcheck-p1-classified.csv');
+    let p1Total = 0, p1VerifiedCorrect = 0, p1ContextRequired = 0, p1NeedsExternal = 0;
+    if (fs.existsSync(p1Path)) {
+      const lines = fs.readFileSync(p1Path, 'utf-8').replace(/^﻿/, '').split('\n').slice(1).filter(Boolean);
+      p1Total = lines.length;
+      for (const l of lines) {
+        // verification_status is col 8 (after CSV parsing) — use simple split for status field
+        const status = l.split(',')[8]?.replace(/"/g, '').trim();
+        if (status === 'VERIFIED_CORRECT') p1VerifiedCorrect++;
+        else if (status === 'VERIFIED_CONTEXT_REQUIRED') p1ContextRequired++;
+        else if (status === 'NEEDS_EXTERNAL_VERIFICATION') p1NeedsExternal++;
+      }
+    }
+
+    // P2 재검토 현황
+    let p2Total = 0, p2RecheckRequired = 0;
+    const p2Path = path.join(AUDIT_DIR, 'p2-volatile-claims.json');
+    if (fs.existsSync(p2Path)) {
+      const p2Data = JSON.parse(fs.readFileSync(p2Path, 'utf-8'));
+      p2Total = p2Data.totalP2Claims ?? 0;
+      const today = new Date().toISOString().slice(0, 10);
+      p2RecheckRequired = (p2Data.records ?? []).filter(
+        (r: { next_review_date: string }) => r.next_review_date <= today
+      ).length;
+    }
+
+    // HIGH 단정 표현 결정
+    let highStrongClaims = 0, strongClaimKeep = 0, strongClaimSoften = 0, strongClaimReview = 0;
+    const scDecPath = path.join(AUDIT_DIR, 'strong-claim-decisions.csv');
+    if (fs.existsSync(scDecPath)) {
+      const lines = fs.readFileSync(scDecPath, 'utf-8').replace(/^﻿/, '').split('\n').slice(1).filter(Boolean);
+      highStrongClaims = lines.length;
+      for (const l of lines) {
+        const dec = l.split(',')[7]?.replace(/"/g, '').trim();
+        if (dec === 'KEEP') strongClaimKeep++;
+        else if (dec === 'SOFTEN') strongClaimSoften++;
+        else strongClaimReview++;
+      }
+    }
+
+    // GSC 연결 여부
+    let gscConnected = false, gscLastImport: string | null = null;
+    const gscPath = path.join(AUDIT_DIR, 'search-console-import.json');
+    if (fs.existsSync(gscPath)) {
+      const gscData = JSON.parse(fs.readFileSync(gscPath, 'utf-8'));
+      gscConnected = (gscData.queryRows?.length ?? 0) > 0;
+      if (gscConnected) gscLastImport = gscData.importedAt?.slice(0, 10) ?? null;
+    }
+
+    factcheckSummary = {
+      p1Total, p1VerifiedCorrect, p1ContextRequired, p1NeedsExternal,
+      p2Total, p2RecheckRequired,
+      highStrongClaims, strongClaimKeep, strongClaimSoften, strongClaimReview,
+      gscConnected, gscLastImport,
+    };
+  } catch {
+    // seo-audit 파일 없으면 null 유지
+  }
+
+  return Response.json({ generatedAt: new Date().toISOString(), summary, posts: rows, factcheckSummary });
 }

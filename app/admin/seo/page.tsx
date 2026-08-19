@@ -44,10 +44,27 @@ interface SeoPostRow {
   authorityScore?: number | null;
 }
 
+// 5단계 추가: Fact-check 현황 데이터 타입
+interface FactcheckSummary {
+  p1Total: number;
+  p1VerifiedCorrect: number;
+  p1ContextRequired: number;
+  p1NeedsExternal: number;
+  p2Total: number;
+  p2RecheckRequired: number;
+  highStrongClaims: number;
+  strongClaimKeep: number;
+  strongClaimSoften: number;
+  strongClaimReview: number;
+  gscConnected: boolean;
+  gscLastImport: string | null;
+}
+
 interface SeoData {
   generatedAt: string;
   summary: Record<string, number>;
   posts: SeoPostRow[];
+  factcheckSummary?: FactcheckSummary | null;
 }
 
 const SUMMARY_LABELS: Record<string, string> = {
@@ -163,6 +180,96 @@ export default function AdminSeoPage() {
             <p className="text-xl font-bold text-[#5f7052]">{data.summary[key]?.toLocaleString() ?? 0}</p>
           </button>
         ))}
+      </div>
+
+      {/* §28 Fact-check 현황 패널 */}
+      {data.factcheckSummary && (
+        <div className="mb-6 bg-white border border-gray-200 rounded-xl p-4">
+          <h2 className="text-[13px] font-semibold text-gray-700 mb-3">🔍 Fact-check 현황</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P1 전체</p>
+              <p className="text-lg font-bold text-red-600">{data.factcheckSummary.p1Total}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P1 검증완료</p>
+              <p className="text-lg font-bold text-green-600">{data.factcheckSummary.p1VerifiedCorrect}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P1 맥락확인</p>
+              <p className="text-lg font-bold text-amber-600">{data.factcheckSummary.p1ContextRequired}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P1 외부확인필요</p>
+              <p className="text-lg font-bold text-red-500">{data.factcheckSummary.p1NeedsExternal}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P2 전체</p>
+              <p className="text-lg font-bold text-orange-500">{data.factcheckSummary.p2Total}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">P2 재검토필요</p>
+              <p className="text-lg font-bold text-orange-400">{data.factcheckSummary.p2RecheckRequired}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">HIGH단정(KEEP)</p>
+              <p className="text-lg font-bold text-green-500">{data.factcheckSummary.strongClaimKeep}</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-gray-400 mb-0.5">HIGH단정(완화권고)</p>
+              <p className="text-lg font-bold text-amber-500">{data.factcheckSummary.strongClaimSoften}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* §29 GSC 연결 상태 */}
+      <div className="mb-6 bg-white border border-gray-200 rounded-xl p-4">
+        <h2 className="text-[13px] font-semibold text-gray-700 mb-2">📡 Google Search Console</h2>
+        {data.factcheckSummary?.gscConnected ? (
+          <div className="text-[12px] text-green-700">
+            ✅ 데이터 연결됨 (마지막 임포트: {data.factcheckSummary.gscLastImport ?? '알 수 없음'})
+          </div>
+        ) : (
+          <div className="text-[12px] text-amber-700 flex items-center gap-2">
+            <span>⚠️ 검색 데이터 미연결 — 실제 클릭·노출·순위 데이터 없음</span>
+            <code className="text-[10px] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded ml-auto">
+              npx tsx scripts/import-search-console.ts &lt;gsc.csv&gt;
+            </code>
+          </div>
+        )}
+      </div>
+
+      {/* §30 SEO Action Queue */}
+      <div className="mb-6 bg-white border border-gray-200 rounded-xl p-4">
+        <h2 className="text-[13px] font-semibold text-gray-700 mb-3">⚡ 우선 작업 큐</h2>
+        <div className="space-y-2 text-[12px]">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-red-100 text-red-700 flex items-center justify-center text-[10px] font-bold shrink-0">1</span>
+            <span className="text-gray-700">P1 Fact-check — 법률·안전·보증금 표현 공식 출처 확인</span>
+            {data.factcheckSummary && <span className="ml-auto text-red-600 font-semibold">{data.factcheckSummary.p1NeedsExternal}건 대기</span>}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-[10px] font-bold shrink-0">2</span>
+            <span className="text-gray-700">GSC 연결 후 고노출·저클릭 페이지 개선</span>
+            <span className="ml-auto text-gray-400">{data.factcheckSummary?.gscConnected ? '대기 중' : 'GSC 연결 필요'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px] font-bold shrink-0">3</span>
+            <span className="text-gray-700">Position 5~20 페이지 본문 답변 강화</span>
+            <span className="ml-auto text-gray-400">GSC 연결 후</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-[10px] font-bold shrink-0">4</span>
+            <span className="text-gray-700">Answer-first 후보 개선</span>
+            <span className="ml-auto text-amber-600 font-semibold">62건 대기</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-[10px] font-bold shrink-0">5</span>
+            <span className="text-gray-700">P2 재검토 (가격·비용·요금 정보 현행화)</span>
+            {data.factcheckSummary && <span className="ml-auto text-gray-500">{data.factcheckSummary.p2Total}건</span>}
+          </div>
+        </div>
       </div>
 
       {/* 필터 */}

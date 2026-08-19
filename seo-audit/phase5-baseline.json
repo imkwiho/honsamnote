@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-08-18T13:20:04.760Z",
+  "gitCommit": "ba8adee64a279d9cad31e74ca51a5061e3336ba6",
+  "phase": 5,
+  "totalPosts": 566,
+  "phase4StartDate": "2026-08-18",
+  "newPostsSincePhase4": 0,
+  "p1ClaimCount": 219,
+  "p2ClaimCount": 355,
+  "p3ClaimCount": 33,
+  "highStrongClaimsCount": 166,
+  "answerFirstSafeCandidates": 62,
+  "primaryPageCount": 49,
+  "pillarCount": 6,
+  "orphanCount": 37,
+  "totalInternalLinks": 2764,
+  "gscDataConnected": false,
+  "gscStatus": "GSC_DATA_REQUIRED",
+  "phase5StartNote": "Phase 5 시작 스냅샷. 정확성 확보 + GSC 연결 + 실제 데이터 기반 개선 단계."
+}
