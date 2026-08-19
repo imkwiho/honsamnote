@@ -1,0 +1,16 @@
+priority,url,type,reason,already_requested
+1,https://honsamnote.co.kr/,homepage,사이트 진입점,no
+2,https://honsamnote.co.kr/guide/oneroom-storage/,pillar,원룸 수납 허브 — 높은 클러스터 규모,no
+2,https://honsamnote.co.kr/guide/laundry/,pillar,세탁 허브,no
+2,https://honsamnote.co.kr/guide/loneliness/,pillar,외로움 허브,no
+3,https://honsamnote.co.kr/category/cleaning/,category,82개 글 — 최대 카테고리,no
+3,https://honsamnote.co.kr/category/products/,category,83개 글 — 최대 카테고리,no
+3,https://honsamnote.co.kr/category/safety/,category,80개 글,no
+3,https://honsamnote.co.kr/category/storage/,category,78개 글,no
+3,https://honsamnote.co.kr/category/food/,category,78개 글,no
+4,https://honsamnote.co.kr/blog/2026-08-14-storage-auto-fcf546/,post,이미 색인 요청 완료,yes
+4,https://honsamnote.co.kr/blog/,blog_index,전체 글 목록,no
+5,https://honsamnote.co.kr/blog/2026-07-29-cost-1/,post,가장 오래된 글 — 대표 콘텐츠,no
+5,https://honsamnote.co.kr/blog/2026-07-30-food-15/,post,밀키트 비교 — 검색 수요 있는 주제,no
+5,https://honsamnote.co.kr/blog/2026-07-30-storage-23/,post,원룸 수납 — 클러스터 허브 연결,no
+5,https://honsamnote.co.kr/blog/2026-07-31-cleaning-79/,post,청소 대표글,no

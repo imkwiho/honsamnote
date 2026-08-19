@@ -89,11 +89,11 @@ export default async function ArticleFooter({ slug, title, category, categoryNam
       </section>
 
       <div className="mt-8 flex flex-wrap gap-2">
-        <Link href="/blog" className="text-[13px] font-semibold text-[#5f7052] bg-[#eef1e6] px-4 py-2 rounded-full hover:opacity-80 transition-opacity">
+        <Link href="/blog/" className="text-[13px] font-semibold text-[#5f7052] bg-[#eef1e6] px-4 py-2 rounded-full hover:opacity-80 transition-opacity">
           ← 전체 글 보기
         </Link>
         {category && (
-          <Link href={`/category/${category}`} className="text-[13px] font-semibold text-[#5f7052] bg-[#eef1e6] px-4 py-2 rounded-full hover:opacity-80 transition-opacity">
+          <Link href={`/category/${category}/`} className="text-[13px] font-semibold text-[#5f7052] bg-[#eef1e6] px-4 py-2 rounded-full hover:opacity-80 transition-opacity">
             {categoryName} 카테고리 더보기
           </Link>
         )}

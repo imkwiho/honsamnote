@@ -25,7 +25,7 @@ out/ 산출물 표본 검사: 포함됨
 - 클러스터 'safety-general' (8개 글) — Primary Page 없음
 
 ### title-content-mismatch (1건, warning)
-- 546개 글에서 대표 키워드가 본문 첫 300자에 없음 — seo-audit/title-content-mismatch.csv 참조
+- 544개 글에서 대표 키워드가 본문 첫 300자에 없음 — seo-audit/title-content-mismatch.csv 참조
 
 ### redirect-missing-wrangler (1건, warning)
 - redirect-map.csv의 301 리다이렉트(/blog/2026-08-10-safety-auto-46a836/ → /blog/2026-08-10-safety-auto-e68c91/)가 wrangler.toml에 없음

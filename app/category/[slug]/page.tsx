@@ -11,6 +11,8 @@ import { SITE_NAME, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_DIMENSIONS, type Breadcru
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 
+const PAGE_SIZE = 10;
+
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -66,6 +68,7 @@ export default async function CategoryPage({ params }: Props) {
   if (!category) notFound();
 
   const posts = await getPostsByCategory(slug);
+  const totalPages = Math.ceil(posts.length / PAGE_SIZE);
   const breadcrumbNodes: BreadcrumbNode[] = [{ name: SITE_NAME, href: '/' }, { name: category.name }];
 
   // 주요 하위 주제(클러스터)별 글 수 — 실제 데이터 기준으로 집계.
@@ -103,7 +106,7 @@ export default async function CategoryPage({ params }: Props) {
                 {categoryPillars.map(pillar => (
                   <Link
                     key={pillar.slug}
-                    href={`/guide/${pillar.slug}`}
+                    href={`/guide/${pillar.slug}/`}
                     className="text-[12.5px] font-semibold text-[#4f5f45] bg-white border border-[#ece4d6] px-3 py-1.5 rounded-full hover:border-[#7c8f6e] transition-colors"
                   >
                     📚 {pillar.name}
@@ -130,7 +133,28 @@ export default async function CategoryPage({ params }: Props) {
       {posts.length === 0 ? (
         <p className="text-[#8a8377] text-sm">아직 이 카테고리에 발행된 글이 없습니다.</p>
       ) : (
-        <PaginatedPostList posts={posts} showCategory={false} />
+        <>
+          <PaginatedPostList posts={posts} showCategory={false} />
+
+          {/* URL 기반 페이지 링크 — Googlebot이 정적 HTML에서 바로 따라갈 수 있도록 */}
+          {totalPages > 1 && (
+            <nav aria-label="카테고리 페이지 이동" className="mt-10 pt-6 border-t border-[#ece4d6]">
+              <p className="text-[12px] text-[#b0a893] mb-3">페이지별 보기</p>
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                  <Link
+                    key={p}
+                    href={p === 1 ? `/category/${slug}/` : `/category/${slug}/page/${p}/`}
+                    className="w-9 h-9 flex items-center justify-center rounded-full text-[13px] font-medium text-[#8a8377] hover:bg-[#33302b]/[0.05] transition-colors border border-[#ece4d6] hover:border-[#7c8f6e]"
+                    aria-current={p === 1 ? 'page' : undefined}
+                  >
+                    {p}
+                  </Link>
+                ))}
+              </div>
+            </nav>
+          )}
+        </>
       )}
     </div>
   );

@@ -24,14 +24,14 @@ const CATEGORY_ICON: Record<string, string> = {
 };
 
 const CATEGORIES = [
-  { label: '생활비 최적화', href: '/category/cost' },
-  { label: '혼밥·식재료 관리', href: '/category/food' },
-  { label: '좁은 집과 수납', href: '/category/storage' },
-  { label: '청소·세탁·집안일', href: '/category/cleaning' },
-  { label: '안전·응급상황', href: '/category/safety' },
-  { label: '주거·계약·이사', href: '/category/housing' },
-  { label: '1인 가구 제품·서비스', href: '/category/products' },
-  { label: '관계·고립·생활 리듬', href: '/category/lifestyle' },
+  { label: '생활비 최적화', href: '/category/cost/' },
+  { label: '혼밥·식재료 관리', href: '/category/food/' },
+  { label: '좁은 집과 수납', href: '/category/storage/' },
+  { label: '청소·세탁·집안일', href: '/category/cleaning/' },
+  { label: '안전·응급상황', href: '/category/safety/' },
+  { label: '주거·계약·이사', href: '/category/housing/' },
+  { label: '1인 가구 제품·서비스', href: '/category/products/' },
+  { label: '관계·고립·생활 리듬', href: '/category/lifestyle/' },
 ];
 
 export default async function HomePage() {
@@ -190,7 +190,7 @@ export default async function HomePage() {
           <p className="text-[13px] font-semibold tracking-widest uppercase text-[#b0a893] mb-3">대표 가이드</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {PILLARS.map(pillar => (
-              <Link key={pillar.slug} href={`/guide/${pillar.slug}`}
+              <Link key={pillar.slug} href={`/guide/${pillar.slug}/`}
                 className="bento-card rounded-3xl bg-[#fffdf9] border border-[#f0e9dc] p-6 group hover:border-[#7c8f6e] transition-colors">
                 <h3 className="text-[15px] font-bold text-[#2f2c26] mb-1.5 group-hover:text-[#4f5f45] transition-colors">{pillar.name}</h3>
                 <p className="text-[12.5px] text-[#8a8377] leading-relaxed line-clamp-2">{pillar.intro}</p>
